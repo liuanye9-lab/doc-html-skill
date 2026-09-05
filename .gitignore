@@ -1,0 +1,16 @@
+# 由 tests/make_negatives.py 生成，不入版本库
+retro-doc-builder/tests/negative-multi-hue.html
+retro-doc-builder/tests/negative-too-many-solid.html
+
+# 渲染自检产物
+*.png
+!docs/*.png
+out/
+screenshots/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store
