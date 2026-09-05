@@ -1,0 +1,321 @@
+/* ===========================================================
+   retro-doc-builder · v6 「黑白灰 + 克莱因蓝点缀」视觉系统
+   ---------------------------------------------------------
+   两条配色纪律（最重要）：
+     1 全篇只有 1 个彩色色相（克莱因蓝 IKB），且只作「点缀」——
+       粗线、小标签、单个关键数字。不用彩色实底卡片。
+     2 实底色块整块最多 1 处（留给唯一焦点句）。
+       层级靠字号阶梯 + 留白 + 顶线粗细，不靠一堆色块。
+   全部用色：白 · 三档灰 · 近黑 · 克莱因蓝（两个明度档）。
+   约束：零 JS / 零 SVG / 零外链；飞书正文宽约 820px
+   =========================================================== */
+
+:root{
+  /* 底：纯白为主，一档几乎不可见的浅灰用于分组 */
+  --page:#FFFFFF;
+  --cell:#FAFAFB;
+  --cell-2:#EDEEF1;
+
+  /* 墨：中性近黑，三档 */
+  --ink:#111317;
+  --ink-2:#4A5058;
+  --ink-3:#8A9099;
+
+  /* 线：本风格的主要结构手段 */
+  --line:#E4E6EA;
+  --line-2:#C9CDD4;
+
+  /* 唯一彩色 = 克莱因蓝 IKB，只作点缀：粗线 / 小标签 / 单个数字
+     实测：IKB 对白底 10.7:1 很清晰，但与 ink(#111317) 区分度仅 1.74——
+     在 11px 小字上会读成黑色。所以小字用 --accent-lt（区分度 2.54），
+     3px 粗线与实底用真 IKB（面积足够，色相看得出来）。 */
+  --accent:#002FA7;
+  --accent-lt:#0047D6;
+
+  --r:14px;
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+              "Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+  color:var(--ink);
+  background:var(--page);
+  font-size:14px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  padding:var(--s5) var(--s5) var(--s6);
+  /* 飞书正文宽约 820px：根容器只能百分比，禁止写死 px */
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+/* ===========================================================
+   1 报头：白底 + 顶部粗线 + 巨型浅灰序号
+   不用实底色块。层级靠 64px 与 12px 的尺度差
+   =========================================================== */
+.hero{
+  border-top:3px solid var(--ink);
+  padding:var(--s5) 0 var(--s6);
+  margin-bottom:var(--s2);
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:0 var(--s5);
+  align-items:start;
+}
+.hero .no{
+  font-size:64px;
+  font-weight:800;
+  line-height:.85;
+  letter-spacing:-.04em;
+  color:var(--line-2);
+  font-variant-numeric:tabular-nums;
+}
+.hero .kicker{                       /* 唯一彩色点缀之一 */
+  display:block;
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.14em;
+  color:var(--accent-lt);           /* 小字必须用亮一档，真 IKB 在此读成黑 */
+  margin-bottom:var(--s3);
+}
+.hero h1,.hero .h{
+  margin:0;
+  font-size:32px;
+  font-weight:700;
+  line-height:1.26;
+  letter-spacing:-.015em;
+  color:var(--ink);
+}
+.hero .dek{
+  margin:var(--s3) 0 0;
+  font-size:15px;
+  line-height:1.68;
+  color:var(--ink-2);
+  max-width:42em;
+}
+
+/* ===========================================================
+   2 bento 网格：尺寸编码优先级
+   卡片一律白底，靠顶线粗细分档，不靠填色
+   =========================================================== */
+.bento{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-auto-rows:minmax(112px,auto);
+  gap:var(--s3);
+  margin:var(--s4) 0;
+}
+.bento>*{border-radius:var(--r);padding:var(--s5)}
+.r2{display:flex;flex-direction:column}
+.r2 .push{margin-top:auto;padding-top:var(--s4)}
+
+.c1{grid-column:span 1}
+.c2{grid-column:span 2}
+.c3{grid-column:span 3}
+.c4{grid-column:1 / -1}
+.r2{grid-row:span 2}
+
+/* ---- 卡面四档：全部白底，只有顶线粗细与颜色不同 ---- */
+.cell{background:#fff;border:1px solid var(--line)}                       /* 常规 */
+.cell-q{background:var(--cell);border:1px solid var(--line)}              /* 安静分组 */
+/* 结构必备 / 警示：顶部粗线用 ::before 内嵌条，不用 border-top。
+   3px border-top 配 border-radius 会在两个上角产生斜接「翘角」，很难看——这是渲染实测发现的 */
+.cell-hd,.cell-acc{background:#fff;border:1px solid var(--line);position:relative;overflow:hidden}
+.cell-hd::before,.cell-acc::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+}
+.cell-hd::before{background:var(--ink)}
+.cell-acc::before{background:var(--accent)}
+
+/* 整块唯一允许的实底。检查器限制：.fill + .mark 合计不得超过 1 处 */
+.fill{background:var(--ink);color:#fff;border:0}
+
+/* ===========================================================
+   3 卡内元件
+   =========================================================== */
+.lb{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.13em;
+  color:var(--ink-3);
+  margin-bottom:var(--s3);
+}
+.fig{
+  font-size:44px;
+  font-weight:800;
+  line-height:1;
+  letter-spacing:-.035em;
+  font-variant-numeric:tabular-nums;
+  display:block;
+  color:var(--ink);
+}
+.fig em{font-size:17px;font-weight:700;font-style:normal;margin-left:2px;color:var(--ink-3)}
+.fig.sm{font-size:27px;letter-spacing:-.02em}
+.fig.acc{color:var(--accent)}        /* 唯一彩色点缀之二：整块最多一个数字用它 */
+
+.ct{font-size:16px;font-weight:700;line-height:1.4;margin:0 0 var(--s2);color:var(--ink)}
+
+.bento p,.stack p{
+  margin:var(--s2) 0 0;
+  font-size:13.5px;
+  line-height:1.64;
+  color:var(--ink-2);
+}
+.bento p:first-child{margin-top:0}
+
+/* 反白覆盖：必须放在通用段落规则之后，
+   否则被同特异性的 .bento p 盖掉，深底上出现深灰字 */
+.bento .fill p,.bento .fill .ct,.fill p,.fill .ct{color:rgba(255,255,255,.9)}
+.fill .lb{color:rgba(255,255,255,.7)}
+.fill b,.fill .fig,.fill .ct{color:#fff}
+.fill .fig em{color:rgba(255,255,255,.75)}
+
+/* 行内警示标记（唯一彩色点缀之三）。
+   必须带元素选择器提高特异性，否则输给 .bento p（0,0,1,1 > 0,0,1,0），
+   源码顺序救不了低特异性——这一条踩过 */
+.bento p.flag,.stack p.flag,p.flag,.flag{color:var(--accent-lt);font-weight:700}
+
+/* 分段条 / 进度条：灰底黑条，不用彩色 */
+.bar{margin-top:var(--s3);height:6px;background:var(--cell-2);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--ink);border-radius:99px}
+.seg{margin-top:var(--s3);display:flex;gap:3px}
+.seg>i{flex:1;height:6px;border-radius:2px;background:var(--cell-2)}
+.seg>i.on{background:var(--ink)}
+.fill .bar{background:rgba(255,255,255,.22)}
+.fill .bar>i{background:#fff}
+.fill .seg>i{background:rgba(255,255,255,.24)}
+.fill .seg>i.on{background:#fff}
+
+/* ===========================================================
+   4 竖排条目组：纯发丝线，与网格形成密度反差
+   =========================================================== */
+.stack{margin:var(--s4) 0;border-top:1px solid var(--line)}
+.stack .row{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:0 var(--s4);
+  padding:var(--s4) 0;
+  border-bottom:1px solid var(--line);
+  align-items:start;
+}
+.stack .row .n{
+  font-size:20px;
+  font-weight:800;
+  line-height:1.2;
+  color:var(--line-2);
+  font-variant-numeric:tabular-nums;
+}
+.stack .row .ct{margin-bottom:var(--s1)}
+
+/* ===========================================================
+   5 小节标题：不用药丸色块，用文字 + 底线
+   彩色仅体现在底线与文字色上
+   =========================================================== */
+.sec{
+  display:flex;
+  align-items:baseline;
+  gap:var(--s3);
+  margin:var(--s6) 0 var(--s4);
+  padding-bottom:var(--s2);
+  border-bottom:2px solid var(--ink);
+}
+.sec .pill{
+  font-size:13.5px;
+  font-weight:800;
+  letter-spacing:.06em;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.sec small{
+  font-size:12.5px;
+  color:var(--ink-3);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.sec::after{content:"";flex:1}
+.sec.acc{border-bottom-color:var(--accent)}
+.sec.acc .pill{color:var(--accent-lt)}
+
+/* ===========================================================
+   6 全块唯一实底：焦点句
+   =========================================================== */
+.mark{
+  background:var(--ink);
+  color:#fff;
+  border-radius:var(--r);
+  padding:var(--s6) var(--s5);
+  margin:var(--s5) 0;
+}
+.mark .big{font-size:23px;font-weight:700;line-height:1.42;letter-spacing:-.01em;margin:0}
+.mark p{margin:var(--s3) 0 0;font-size:13.5px;color:rgba(255,255,255,.7)}
+
+/* ===========================================================
+   7 表格 · 清单 · 引语 · 脚注
+   =========================================================== */
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:var(--s4) 0}
+th{
+  text-align:left;padding:var(--s3) var(--s3) var(--s2);
+  background:none;border-bottom:2px solid var(--ink);
+  font-size:11px;font-weight:700;letter-spacing:.11em;color:var(--ink-3);
+}
+td{padding:var(--s3);border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
+
+ul.check{list-style:none;margin:var(--s3) 0 0;padding:0}
+ul.check li{position:relative;padding-left:22px;margin-bottom:var(--s2);font-size:13.5px;color:var(--ink-2)}
+ul.check li::before{
+  content:"";position:absolute;left:0;top:.42em;
+  width:11px;height:11px;border:1.5px solid var(--line-2);border-radius:3px;
+}
+.fill ul.check li::before{border-color:rgba(255,255,255,.5)}
+
+.quote{
+  margin:var(--s5) 0;padding:var(--s5) 0;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--line);
+  font-size:19px;font-weight:600;line-height:1.52;letter-spacing:-.01em;
+}
+.quote .attr{display:block;margin-top:var(--s3);font-size:12px;font-weight:600;color:var(--ink-3);letter-spacing:.04em}
+
+.foot{margin-top:var(--s5);padding-top:var(--s4);border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-3)}
+.foot b{color:var(--ink-2)}
+
+b{font-weight:700}
+
+/* ===========================================================
+   8 响应式：820px 是飞书正文真实宽度
+   =========================================================== */
+@media(max-width:880px){
+  .hero h1,.hero .h{font-size:28px}
+  .hero .no{font-size:54px}
+  .fig{font-size:38px}
+}
+
+@media(max-width:640px){
+  body{padding:var(--s4) var(--s4) var(--s5)}
+  .bento{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+  .c3,.c4{grid-column:1 / -1}
+  .r2{grid-row:auto}
+  .bento>*{padding:var(--s4)}
+  .hero{grid-template-columns:1fr;gap:var(--s2);padding:var(--s4) 0 var(--s5)}
+  .hero .no{font-size:40px}
+  .hero h1,.hero .h{font-size:23px}
+  .hero .dek{font-size:14px}
+  .fig{font-size:33px}
+  .mark{padding:var(--s5) var(--s4)}
+  .mark .big{font-size:18.5px}
+  .quote{font-size:17px}
+  .sec small{display:none}
+}
+
+@media(max-width:440px){
+  .bento{grid-template-columns:1fr}
+  .c1,.c2{grid-column:1 / -1}
+}

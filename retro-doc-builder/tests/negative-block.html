@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="判断框架">
+<title>负例 · 应被拦下</title>
+<link rel="stylesheet" href="./nope.css">
+<style>
+html{width:1180px}
+body{width:1180px;height:520px;overflow:hidden}
+:root{--blue:#3370FF;--blue-bg:#E8F1FF;--green:#00B42A;--orange:#FF7D00}
+body{font-family:-apple-system,sans-serif;font-size:12px}
+.kicker2{background:var(--blue-bg);color:#3370FF;border-radius:999px;padding:4px 12px}
+.hero{background:linear-gradient(120deg,#1456F0,#3370FF);border-radius:12px;padding:14px;color:#fff}
+.card{border-radius:10px;box-shadow:0 2px 8px rgba(31,35,41,.06);border-left:3px solid #3370FF;padding:10px}
+.card2{border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:3px solid #00B42A;padding:10px}
+.card3{border-radius:10px;border-left:3px solid #FF7D00;padding:10px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.t{font-size:12.5px}
+.s{font-size:11.5px}
+@keyframes pulse{0%{opacity:.6}100%{opacity:1}}
+.live{animation:pulse 2s infinite}
+</style>
+</head>
+<body>
+<div class="kicker2">判断框架</div>
+<div class="hero">这是一个渐变 hero，应该被拦下</div>
+<div class="grid">
+  <div class="card"><div class="t">✓ 适合做</div><div class="s">左边框强调卡</div></div>
+  <div class="card2"><div class="t">🚀 前提</div><div class="s">emoji 当图标</div></div>
+  <div class="card3"><div class="t">× 别做</div><div class="s">红绿灯语义色</div></div>
+</div>
+<input type="checkbox"> 用了原生 checkbox
+<svg width="10" height="10"><circle cx="5" cy="5" r="4"/></svg>
+<div class="mark">第一个 mark</div>
+<div class="mark">第二个 mark，应该被拦</div>
+<img src="https://example.com/chart.png">
+<script>console.log('should be blocked')</script>
+</body>
+</html>
