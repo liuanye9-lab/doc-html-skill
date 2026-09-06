@@ -11,6 +11,7 @@
     python3 tests/make_negatives.py --check    # 生成并断言每条都被拦住
 """
 import os
+import re
 import subprocess
 import sys
 
@@ -41,6 +42,9 @@ CASES = [
      lambda s: s.replace('class="lb"', 'class="lb flag"'), '核心色用在'),
     ('second-hue', '引入第二个色相',
      lambda s: s.replace('--ink-3:#86868B;', '--ink-3:#C0392B;'), '色相'),
+    # 这条对应用户的原话「不就是换了个颜色吗」——只换配色不换形态必须被拦
+    ('color-only-theme', '主题只换颜色不换形态',
+     lambda s: re.sub(r'\.t-modern\s+[^{}]*\{[^{}]*\}', ' ', s), '结构属性'),
 ]
 
 

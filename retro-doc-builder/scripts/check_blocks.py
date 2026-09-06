@@ -17,8 +17,10 @@ BANNED = [
     (r'linear-gradient|conic-gradient|radial-gradient',
                                        'ERROR', '禁止渐变：AI slop 头号特征'),
     # 阴影不再一律禁止：允许「极淡 + 范围极大」，但下方会另行检查强度与数量
-    (r'border-radius\s*:\s*(?:[1-9]\d|\d{3,})px',
-                                       'WARN',  '圆角过大：现代主义极简用微圆角（0–8px），大圆角会显得廉价'),
+    # 9–99px 才是「大圆角卡片」；999px 是刻意的药丸/胶囊形状，属于另一回事
+    (r'border-radius\s*:\s*(?!999px)(?:[1-9]\d|[1-9]\d\d)px(?!\d)',
+                                       'WARN',  '圆角过大：现代主义极简用微圆角（0–8px）；'
+                                                '药丸形请直接用 999px，不要用中间值'),
     (r'#3370FF|#1456FO|#1456F0|#E8F1FF|#5B8CFF|#8FB4FF',
                                        'ERROR', '禁止通用 SaaS 蓝：改用主题自带的 --key 核心色'),
     (r'#00B42A|#E8FFEA|#FF7D00|#FFF7E8',
@@ -247,6 +249,31 @@ def check_v7_discipline(txt, warns, infos):
                             f'否则就是廉价的封闭卡片阴影')
             if a > 0.06:
                 errs.append(f'阴影 alpha {a} 过重；须 ≤0.06（极淡）')
+
+    # --- 主题必须换形态，不能只换颜色 ---
+    # 这条规则的由来：v7 第一版五套主题只覆盖了颜色与字号，
+    # 用户一眼看出「不就是换了个颜色」。风格差异必须体现在组件形态上：
+    # 网格怎么成形、分节怎么标记、条目怎么排列、边界怎么界定。
+    if th:
+        own = re.findall(r'\.t-%s\b([^{}]*)\{([^{}]*)\}' % th, txt)
+        props = set()
+        for _sel, decl in own:
+            props |= set(re.findall(r'([a-z-]+)\s*:', decl))
+        STRUCTURAL = {
+            'display', 'grid-template-columns', 'grid-column', 'flex-direction',
+            'column-count', 'column-rule', 'float', 'text-align', 'content',
+            'border-left', 'border-right', 'justify-items', 'padding-left',
+            'writing-mode', 'position', 'order',
+        }
+        hit = props & STRUCTURAL
+        if len(hit) < 3:
+            errs.append(f'主题 t-{th} 只覆盖了 {len(hit)} 类结构属性'
+                        f'（{sorted(hit) if hit else "无"}）；'
+                        f'五套模板必须换组件形态而不是只换配色——'
+                        f'网格如何成形、分节如何标记、条目如何排列、边界如何界定，'
+                        f'至少要有 3 类结构性差异')
+        else:
+            infos.append(f'结构签名 {len(hit)} 类：{", ".join(sorted(hit)[:6])}')
 
     # --- 打破卡片：不应给单元同时加边框 + 内边距做成封闭卡片 ---
     closed = re.findall(r'\.u[\w-]*\s*\{[^}]*border\s*:\s*1px[^}]*padding[^}]*\}', txt)

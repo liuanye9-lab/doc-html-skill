@@ -68,65 +68,268 @@
    1 五套主题：只改 token 与极少数结构，不改 HTML
    =========================================================== */
 
-/* --- 瑞士国际主义：直角 · 不对称 · 三档灰建立层级 · 瑞士红 ---
-   判据来源：所有边角 90 度、一律左对齐（居中即破坏原则）、
-   右侧留白是「有构成作用的」、层级靠字号字重灰阶而非颜色 */
+/* ===========================================================
+   1 五套主题
+   每套不只换色，而是换**组件形态**：网格如何成形、分节如何
+   标记、条目如何排列、边界如何界定，都各有结构签名。
+   HTML 完全不动，只改 body 的一个 class。
+   =========================================================== */
+
+/* ▓▓▓ 瑞士国际主义 ▓▓▓
+   结构签名：可见的网格骨架。
+   判据——「grid 不是隐藏的，它是设计的可见骨架」；左边距是锚点，
+   一切从它悬挂；分节标题用实心色条 + 反白字。
+   形态改动：顶线改竖栏线 · 序号移入左栏槽 · 分节变实心色条 ·
+             报头不对称三列 · 表格加竖栏线 */
 .t-swiss{
   --key:#E30613; --key-lt:#E30613;
-  --r:0px;
-  --lift:none;
+  --r:0px; --lift:none;
   --tint:#F0F0F0; --tint-2:#E4E4E4;
   --ink:#000000; --ink-2:#333333; --ink-3:#666666; --ink-4:#999999;
   --line:#CCCCCC; --line-2:#999999;
-  --lbl-tr:uppercase;
-  --lbl-ls:.14em;
-  --band:80px;
+  --lbl-tr:uppercase; --lbl-ls:.14em; --band:80px;
 }
-
-/* --- 苹果式现代主义：通栏交替 · 微圆角 · 单一蓝 ---
-   判据来源：块与块之间 0 间隙，靠底色变化本身充当分隔；
-   正文 17px 而非 16px；字重阶梯刻意跳过 500；
-   全系统只有一处阴影，且只给图像不给卡片 */
-.t-modern{
-  --key:#002FA7; --key-lt:#0047D6;
-  --r:6px;
-  --band:88px;
+/* 单元靠竖栏线界定，而不是顶线——这才是「可见的网格」 */
+.t-swiss .u-t,.t-swiss .u-h,.t-swiss .u-k{
+  border-top:0;
+  border-left:1px solid var(--line);
+  padding:0 0 0 var(--s3);
 }
+.t-swiss .u-h{border-left:3px solid var(--ink)}
+.t-swiss .u-k{border-left:3px solid var(--key)}
+.t-swiss .u-q{background:var(--tint);padding:var(--s3);border-left:1px solid var(--line-2)}
+.t-swiss .grid{gap:var(--s5) 0}          /* 栏线自身充当间隔，不留缝 */
+.t-swiss .grid>*{padding-right:var(--s4)}
+/* 分节标题：实心色条 + 反白字，横贯整栏 */
+.t-swiss .sec{
+  display:block;border:0;padding:0;margin:var(--s7) 0 var(--s4);
+}
+.t-swiss .sec .pill{
+  display:inline-block;background:var(--ink);color:#fff;
+  padding:var(--s1) var(--s3);font-size:12px;
+}
+.t-swiss .sec.key .pill{background:var(--key)}
+.t-swiss .sec small{display:block;margin-top:var(--s2);white-space:normal}
+.t-swiss .sec::after{display:none}
+/* 竖排条目：序号进左栏槽，正文全部从同一条左边距悬挂 */
+.t-swiss .stack{border-top:3px solid var(--ink)}
+.t-swiss .stack .row{grid-template-columns:64px 1fr;gap:0}
+.t-swiss .stack .row .n{font-weight:700;color:var(--ink);font-size:13px;padding-top:2px}
+.t-swiss table th,.t-swiss table td{
+  border-right:1px solid var(--line);padding-left:var(--s2);
+}
+.t-swiss table th:last-child,.t-swiss table td:last-child{border-right:0}
+.t-swiss .hero{grid-template-columns:auto minmax(0,7fr) 3fr}
+.t-swiss .hero>*:last-child{grid-column:2}
+.t-swiss .mark{border-radius:0}
+.t-swiss ul.check li::before{border-radius:0}
 
-/* --- 杂志编辑部：极端字号对比（10:1）· 细横线 · 零彩色 ---
-   判据来源：显示字与正文比可达 10:1 以上；
-   区块之间 100px 以上纯留白；引语打断栏流形成视觉标点 */
+/* ▓▓▓ 苹果式现代主义 ▓▓▓
+   结构签名：整屏通栏「瓷砖」，居中堆叠。
+   判据——每块占约一屏、底色变化本身充当分隔、内容居中成栈、
+   药丸形标签、正文 17px。
+   形态改动：报头居中 · 网格单元居中 · 标签变药丸 · 通栏 0 间隙 */
+.t-modern{ --key:#002FA7; --key-lt:#0047D6; --r:6px; --band:88px; }
+.t-modern .hero{
+  grid-template-columns:1fr;justify-items:center;text-align:center;
+  gap:var(--s3) 0;
+}
+.t-modern .hero .dek{
+  max-width:32em;margin-left:auto;margin-right:auto;text-align:center;
+}
+.t-modern .hero .no{font-size:52px;line-height:1}
+/* 药丸标签是苹果的签名形状，只用在标签上 */
+.t-modern .lb,.t-modern .hero .kicker{
+  display:inline-block;border:1px solid var(--line);
+  border-radius:999px;padding:3px 12px;
+}
+.t-modern .u-h,.t-modern .u-k,.t-modern .u-t{
+  border-top:0;padding-top:0;text-align:center;
+}
+.t-modern .u-h .lb{border-color:var(--ink);color:var(--ink)}
+.t-modern .u-k .lb{border-color:var(--key);color:var(--key-lt)}
+.t-modern .grid{gap:var(--s7) var(--s5);align-items:start}
+.t-modern .grid p{
+  margin-left:auto;margin-right:auto;
+  text-align:left;          /* 苹果只居中标题与短标语，正文仍左对齐 */
+  max-width:30em;
+}
+.t-modern .u-q{text-align:center}
+.t-modern .seg{margin-left:auto;margin-right:auto}
+.t-modern .sec{justify-content:center;border-bottom:0;margin-bottom:var(--s5)}
+.t-modern .sec::after{display:none}
+.t-modern .stack{border-top:0}
+.t-modern .stack .row{
+  grid-template-columns:1fr;justify-items:center;text-align:center;
+  border-bottom:0;padding:var(--s5) 0;
+}
+.t-modern .stack .row+.row{border-top:1px solid var(--line)}
+.t-modern .stack .row .n{color:var(--ink-4);font-size:12px}
+.t-modern .stack p{
+  margin-left:auto;margin-right:auto;text-align:left;max-width:34em;
+}
+.t-modern .mark{text-align:center}
+.t-modern .mark p{margin-left:auto;margin-right:auto;text-align:center}
+.t-modern .quote{text-align:center;margin-left:auto;margin-right:auto}
+
+/* ▓▓▓ 杂志编辑部 ▓▓▓
+   结构签名：真正的报纸分栏 + 首字下沉 + 引语打断栏流。
+   判据——正文跨两栏流动、栏间加竖分隔线、`::first-letter` 首字
+   下沉 float left、引语打断栏流形成视觉标点、报头式眉题。
+   形态改动：条目改 column-count 双栏流 · 首字下沉 · 眉题上下双线 ·
+             网格改不等宽栏 · 引语悬挂出血 */
 .t-editorial{
-  --key:#1D1D1F; --key-lt:#1D1D1F;   /* 核心色就是墨色本身：全黑白灰 */
-  --r:0px;
-  --lift:none;
-  --tint:#F7F7F5; --tint-2:#EDEDEA;
-  --band:104px;
+  --key:#1D1D1F; --key-lt:#1D1D1F;
+  --r:0px; --lift:none;
+  --tint:#F7F7F5; --tint-2:#EDEDEA; --band:104px;
 }
+/* 眉题：上下双线的报头式区块 */
+.t-editorial .hero .kicker{
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--line);
+  padding:var(--s2) 0;margin-bottom:var(--s4);
+}
+.t-editorial .hero .no{font-size:96px;color:var(--line-2)}
+.t-editorial .hero h1{font-size:42px;letter-spacing:-.028em}
+/* 首字下沉：编辑体裁最强的结构签名 */
+.t-editorial .hero .dek::first-letter{
+  float:left;font-size:56px;line-height:.82;font-weight:700;
+  margin:2px 8px 0 0;color:var(--ink);
+}
+/* 竖排条目改成真正的双栏流动，栏间画竖线 */
+.t-editorial .stack{
+  border-top:2px solid var(--ink);padding-top:var(--s4);
+  column-count:2;column-gap:var(--s6);
+  column-rule:1px solid var(--line);
+}
+.t-editorial .stack .row{
+  display:block;padding:0 0 var(--s4);border-bottom:0;
+  break-inside:avoid;
+}
+.t-editorial .stack .row .n{
+  display:inline-block;font-size:11px;font-weight:700;
+  letter-spacing:.1em;color:var(--ink-3);margin-bottom:var(--s1);
+}
+.t-editorial .stack p{max-width:none}
+/* 网格改不等宽：编辑版面刻意不等分 */
+.t-editorial .grid{grid-template-columns:1.4fr 1fr 1fr 1.1fr;gap:var(--s6) var(--s5)}
+.t-editorial .u-t,.t-editorial .u-h,.t-editorial .u-k{border-top-style:solid}
+.t-editorial .fig{font-size:64px}
+/* 引语打断栏流、向左出血 */
+.t-editorial .quote{
+  font-size:27px;font-weight:600;max-width:30em;
+  border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);
+  padding:var(--s5) 0;
+}
+.t-editorial .mark{
+  background:none;color:var(--ink);padding:var(--s6) 0;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--line);
+}
+.t-editorial .mark .big{font-size:31px;font-weight:700}
+.t-editorial .mark p{color:var(--ink-2)}
+.t-editorial .sec{border-bottom:2px solid var(--ink)}
+.t-editorial ul.check li::before{border-radius:0}
 
-/* --- 画廊极简：留白拉到最大 · 字号收小 · 近中性点缀 --- */
+/* ▓▓▓ 画廊极简 ▓▓▓
+   结构签名：展品式隔离——单栏、标签在下、无线条，纯靠空气分隔。
+   形态改动：网格塌成单栏 · 标签移到内容下方（像展签）·
+             去掉所有分隔线 · 每项独占一段留白 */
 .t-gallery{
-  --key:#4E6E7A; --key-lt:#4E6E7A;   /* 石墨青，低饱和，几乎不抢眼 */
-  --r:2px;
-  --lift:none;
+  --key:#4E6E7A; --key-lt:#4E6E7A;
+  --r:2px; --lift:none;
   --tint:#FAFAF9; --tint-2:#F0F0EE;
   --line:#E8E8E5; --line-2:#D2D2CE;
-  --band:120px;                       /* 全系统最大呼吸量 */
-  --lbl-ls:.18em;
-  --lbl-tr:uppercase;
+  --band:120px; --lbl-ls:.18em; --lbl-tr:uppercase;
 }
+/* 单栏陈列：一次只看一件 */
+.t-gallery .grid{grid-template-columns:1fr;gap:var(--s7) 0}
+.t-gallery .c1,.t-gallery .c2,.t-gallery .c3,.t-gallery .c4{grid-column:1 / -1}
+/* 标签移到内容下方，像美术馆展签 */
+.t-gallery .u-t,.t-gallery .u-h,.t-gallery .u-k{
+  border-top:0;padding-top:0;
+  display:flex;flex-direction:column-reverse;align-items:flex-start;
+}
+.t-gallery .u-t>.lb,.t-gallery .u-h>.lb,.t-gallery .u-k>.lb{
+  margin:var(--s3) 0 0;color:var(--ink-3);font-size:10.5px;
+}
+.t-gallery .u-h>.lb{border-top:1px solid var(--ink);padding-top:var(--s2)}
+.t-gallery .u-k>.lb{border-top:1px solid var(--key);padding-top:var(--s2);color:var(--key)}
+.t-gallery .u-q{background:none;padding:0;border-left:1px solid var(--line-2);padding-left:var(--s4)}
+.t-gallery .hero{grid-template-columns:1fr;gap:var(--s4) 0}
+.t-gallery .hero .no{font-size:40px;color:var(--ink-4)}
+.t-gallery .hero h1{font-size:29px;font-weight:600;letter-spacing:-.012em}
+.t-gallery .fig{font-size:38px;font-weight:600}
+.t-gallery .ct{font-size:15.5px}
+/* 去掉行线，只靠留白 */
+.t-gallery .stack{border-top:0}
+.t-gallery .stack .row{border-bottom:0;padding:var(--s6) 0;grid-template-columns:auto 1fr}
+.t-gallery .stack .row+.row{border-top:1px solid var(--line)}
+.t-gallery .sec{border-bottom:0;margin-bottom:var(--s6)}
+.t-gallery .mark{
+  background:none;color:var(--ink);padding:var(--s7) 0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.t-gallery .mark .big{font-size:23px;font-weight:400;line-height:1.6}
+.t-gallery .mark p{color:var(--ink-3)}
+.t-gallery .quote{font-size:19px;font-weight:400;border-top-width:1px}
 
-/* --- 技术档案：等宽标签 · 表格化数据 · 深靛 --- */
+/* ▓▓▓ 技术档案 ▓▓▓
+   结构签名：终端框线 + 键值对齐。
+   判据——框线字符 ┌─┬─┐ ├ ┤ └ ┘ 构成边界、数据表格化、
+   等宽对齐、方块进度条。
+   形态改动：单元加框线角标 · 标签加 ── 前缀 · 虚线边界 ·
+             刻度变方块 · 表格全竖线 */
 .t-mono{
   --key:#26346B; --key-lt:#33459A;
-  --r:0px;
-  --lift:none;
+  --r:0px; --lift:none;
   --tint:#F6F7F9; --tint-2:#EAECF0;
-  --face:var(--mono);
-  --lbl-tr:uppercase;
-  --lbl-ls:.12em;
-  --band:80px;
+  --face:var(--mono); --lbl-tr:uppercase; --lbl-ls:.12em; --band:80px;
 }
+/* 单元用框线字符起头，取代顶线 */
+.t-mono .u-t,.t-mono .u-h,.t-mono .u-k{
+  border-top:0;padding-top:0;
+  border-left:1px dashed var(--line-2);padding-left:var(--s3);
+}
+.t-mono .u-h{border-left:1px solid var(--ink)}
+.t-mono .u-k{border-left:1px solid var(--key)}
+.t-mono .lb::before{
+  content:"── ";font-family:var(--mono);color:var(--ink-4);
+}
+.t-mono .u-h>.lb::before{content:"┌── ";color:var(--ink)}
+.t-mono .u-k>.lb::before{content:"┌── ";color:var(--key-lt)}
+.t-mono .u-q{
+  background:var(--tint);padding:var(--s3);
+  border:1px dashed var(--line-2);
+}
+/* 刻度改方块，读作终端进度条 */
+.t-mono .seg{gap:2px;max-width:none}
+.t-mono .seg>i{height:auto;background:none;flex:0 0 auto}
+.t-mono .seg>i::before{
+  content:"·";font-family:var(--mono);font-size:15px;color:var(--ink-4);
+}
+/* 用 ▪ 而不是 ■：13px 下实心方块连成一排黑格子，太重 */
+.t-mono .seg>i.on::before{content:"▪";color:var(--ink)}
+/* 条目改键值对：左键右值，等宽对齐 */
+.t-mono .stack{border-top:1px solid var(--ink)}
+.t-mono .stack .row{grid-template-columns:56px 1fr;gap:0 var(--s3)}
+.t-mono .stack .row .n{font-weight:700;color:var(--key-lt);font-size:12.5px;padding-top:3px}
+.t-mono .stack .row .ct::before{content:"› ";color:var(--ink-4)}
+/* 表格全竖线，像终端里的 ASCII 表 */
+.t-mono table{font-family:var(--mono);font-size:13.5px;border:1px solid var(--line-2)}
+.t-mono table th{border-bottom:1px solid var(--ink);padding-left:var(--s2)}
+.t-mono table td{
+  border-right:1px dashed var(--line);padding-left:var(--s2);
+  font-variant-numeric:tabular-nums;
+}
+.t-mono table th{border-right:1px dashed var(--line)}
+.t-mono table th:last-child,.t-mono table td:last-child{border-right:0}
+.t-mono .sec .pill::before{content:"[ ";color:var(--ink-4)}
+.t-mono .sec .pill::after{content:" ]";color:var(--ink-4)}
+.t-mono .hero .no{font-size:60px;font-weight:700}
+.t-mono .hero h1{font-size:31px;letter-spacing:-.01em}
+.t-mono .hero .kicker::before{content:"// ";color:var(--ink-4)}
+.t-mono .mark{border-radius:0}
+.t-mono ul.check li::before{border-radius:0;border-style:dashed}
+.t-mono ul.check li::marker{content:""}
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -485,6 +688,16 @@ b{font-weight:600}   /* 标题粗、正文细：正文加粗只到 600，不用 
 
 @media(max-width:640px){
   :root{--band:56px}
+  /* 编辑部：双栏流在窄屏塌成单栏，否则每栏只剩十几个字符 */
+  .t-editorial .stack{column-count:1;column-rule:none}
+  .t-editorial .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* 苹果：窄屏取消居中，居中在窄栏里更难读 */
+  .t-modern .hero,.t-modern .stack .row{justify-items:start;text-align:left}
+  .t-modern .hero .dek,.t-modern .grid p,.t-modern .mark p{text-align:left}
+  .t-modern .u-h,.t-modern .u-k,.t-modern .u-t,.t-modern .u-q{text-align:left}
+  .t-modern .sec{justify-content:flex-start}
+  /* mono：键值栏槽收窄 */
+  .t-mono .stack .row,.t-swiss .stack .row{grid-template-columns:40px 1fr}
   .t-gallery{--band:72px}
   .t-editorial{--band:64px}
   .band{padding-left:var(--s4);padding-right:var(--s4)}
