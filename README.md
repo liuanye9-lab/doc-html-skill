@@ -1,4 +1,6 @@
-# retro-doc-builder
+# 复盘文档 HTML skill
+
+> skill 名 `retro-doc-builder`｜在豆包里说一句复盘需求即可触发
 
 把一场活动、项目或客户交付，复盘成**下一个人能照着做**的飞书文档。
 
