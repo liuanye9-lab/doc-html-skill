@@ -39,12 +39,19 @@ CASES = [
     ('big-radius', '大圆角',
      lambda s: s.replace('--r:6px;', '--r:24px;'), '圆角'),
     ('too-much-key', '核心色超出 10% 口径',
-     lambda s: s.replace('class="lb"', 'class="lb flag"'), '核心色用在'),
+     # 给大量元素挂上核心色标记；.sk/.eyebrow 是 modern 骨架真实存在的类
+     lambda s: s.replace('class="sk"', 'class="sk flag"')
+                .replace('class="eyebrow"', 'class="eyebrow flag"')
+                .replace('<b>', '<b class="flag">'), '核心色用在'),
     ('second-hue', '引入第二个色相',
      lambda s: s.replace('--ink-3:#86868B;', '--ink-3:#C0392B;'), '色相'),
-    # 这条对应用户的原话「不就是换了个颜色吗」——只换配色不换形态必须被拦
-    ('color-only-theme', '主题只换颜色不换形态',
-     lambda s: re.sub(r'\.t-modern\s+[^{}]*\{[^{}]*\}', ' ', s), '结构属性'),
+    # 这两条对应用户的原话「不就是换了个颜色吗」。
+    # shared-skeleton 是最关键的一条：模拟「五套共用一份 HTML 骨架，
+    # 只切 body 的 class」——这正是被否决两轮的真实错误。
+    ('shared-skeleton', '换了主题类但骨架照抄别套',
+     lambda s: s.replace('class="t-modern"', 'class="t-swiss"'), '架构组件'),
+    ('borrowed-arch', '混用别套的架构组件',
+     lambda s: s.replace('class="tile alt"', 'class="tile alt poster"', 1), '借用'),
 ]
 
 

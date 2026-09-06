@@ -119,15 +119,16 @@ python3 retro-doc-builder/tests/make_negatives.py --check
 
 同一份 HTML 结构，切换 `<body>` 的主题类即可换风格。
 
-| class | 名称 | 结构签名（形态差异，不是配色） | 核心色 |
+| 模板 | 版面原型 | 自己的架构组件 | 核心色 |
 |---|---|---|---|
-| `t-modern` | 苹果式现代主义 | 居中成栈 · 药丸形标签 · 无行线分段 | 克莱因蓝 `#002FA7` |
-| `t-swiss` | 瑞士国际主义 | 竖栏线取代顶线 · 序号进左栏槽 · 实心色条反白分节 | 瑞士红 `#E30613` |
-| `t-editorial` | 杂志编辑部 | `column-count:2` 真双栏流 + 栏间竖线 · 首字下沉 · 不等宽网格 | 无（纯黑白灰） |
-| `t-gallery` | 画廊极简 | 单栏陈列 · `column-reverse` 标签移到内容下方 · 无行线 | 石墨青 `#4E6E7A` |
-| `t-mono` | 技术档案 | 框线字符 `┌──` · `//` `[ ]` 前后缀 · 字符刻度 · 虚线竖表格 | 深靛 `#26346B` |
+| `t-modern` | 产品页 tile 序列 | `.tile` `.statrow` `.feats` `.pills` | 克莱因蓝 `#002FA7` |
+| `t-swiss` | 海报式 12 栏网格 | `.poster` `.gwall` `.sbar` `.hang` | 瑞士红 `#E30613` |
+| `t-editorial` | 报纸头版 | `.mast` `.lede` `.flow` `.pullq` `.withbar` | 无（纯黑白灰） |
+| `t-gallery` | 展览动线 | `.walk` `.plate` `.vitrine` | 石墨青 `#4E6E7A` |
+| `t-mono` | 终端记录卡 | `.rec` `.kv` `.readout` `.entries` | 深靛 `#26346B` |
 
-**硬规则**：主题必须覆盖 ≥3 类结构属性，只换配色直接 ERROR。**换配色不叫换风格。**
+**硬规则**：每套模板必须用自己的一组架构组件（<3 个报 ERROR），且不得借用别套的组件。
+五套模板是**五种版面架构**——报头形态、阅读顺序、信息容器都不同，不是同一份骨架换配色。
 
 ### 五套共同遵守的基调
 
@@ -145,7 +146,7 @@ python3 retro-doc-builder/tests/make_negatives.py --check
 - 核心色占比五套均 **13%**（9/68 个元素），符合 90/10
 - 字号跨度 **8.7×**（11–96px）
 - 375px 窄屏五套全部 `fits=true overflow=0`
-- 负例 **9/9 全部被拦住**（含「只换颜色不换形态」一条）
+- 负例 **10/10 全部被拦住**（含 `shared-skeleton`：换主题类但骨架照抄别套）
 
 ### 用法
 

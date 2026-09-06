@@ -355,8 +355,11 @@ body{
   width:100%;
   max-width:100%;
   overflow-x:hidden;
-  padding:0;
+  /* 新架构（poster/mast/walk/rec）直接挂在 body 上，需要自己的边距；
+     modern 用通栏 tile 交替底色，必须零边距，见下 */
+  padding:var(--s6) var(--s5);
 }
+.t-modern{padding:0}
 
 /* ===========================================================
    2 通栏模块：替代卡片的一级分隔手段
@@ -608,6 +611,8 @@ body{
   color:rgba(255,255,255,.68);max-width:40em;
 }
 .t-swiss .mark,.t-mono .mark{border-radius:0}
+/* 新架构下 .mark 不再被 .band 包裹，自己补足内边距 */
+.t-swiss .mark,.t-mono .mark{padding:var(--s6) var(--s5);margin:var(--s6) 0}
 .t-editorial .mark{
   background:none;color:var(--ink);padding:var(--s6) 0;
   border-top:2px solid var(--ink);border-bottom:1px solid var(--line);
@@ -687,6 +692,304 @@ b{font-weight:600}   /* 标题粗、正文细：正文加粗只到 600，不用 
    10 响应式：820px 是飞书正文真实宽度
    留白按比例收，但绝不塌成 0
    =========================================================== */
+/* ===========================================================
+   6 五套模板各自的版面架构
+   这一节是「五套模板」真正的差异所在：不是配色，而是**页面
+   如何组织**——报头是什么形态、内容按什么顺序读、条目用什么
+   容器承载、边界由什么界定。每套用自己的一组组件，互不共用。
+   =========================================================== */
+
+/* ▓▓▓ swiss：海报式可见网格 ▓▓▓
+   一切落在显式栏位上，左边距是锚点，右侧留毛边。 */
+.poster{
+  display:grid;grid-template-columns:repeat(12,1fr);
+  gap:0 var(--s3);align-items:start;margin-bottom:var(--s7);
+}
+.poster .pno{
+  grid-column:1 / 4;font-size:150px;font-weight:800;line-height:.78;
+  letter-spacing:-.06em;color:var(--ink);
+}
+.poster .pkick{
+  grid-column:4 / 11;font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.14em;color:var(--key);
+  padding-bottom:var(--s2);border-bottom:1px solid var(--ink);
+}
+.poster h1{
+  grid-column:4 / 11;margin:var(--s3) 0 0;
+  font-size:40px;font-weight:700;line-height:1.14;letter-spacing:-.03em;
+}
+.poster .pdek{
+  grid-column:4 / 10;margin:var(--s3) 0 0;
+  font-size:15px;color:var(--ink-2);line-height:1.66;
+}
+/* 数据以栏位精确落位，不是等分卡片 */
+.gwall{
+  display:grid;grid-template-columns:repeat(12,1fr);
+  gap:var(--s5) var(--s3);list-style:none;margin:0 0 var(--s6);padding:0;
+  border-top:3px solid var(--ink);padding-top:var(--s3);
+}
+.gwall>li{grid-column:span 3;border-left:1px solid var(--line);padding-left:var(--s3)}
+.gwall>li.w6{grid-column:span 6}
+.gwall>li.w4{grid-column:span 4}
+.gwall>li.lead{border-left:3px solid var(--ink)}
+.gwall>li.warn{border-left:3px solid var(--key)}
+.gwall .gk{
+  display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--ink-3);margin-bottom:var(--s2);
+}
+.gwall .gv{font-size:56px;font-weight:800;line-height:.9;letter-spacing:-.04em}
+.gwall .gv em{font-style:normal;font-size:16px;font-weight:600;margin-left:3px}
+.gwall .gv.warn{color:var(--key)}
+.gwall p{margin:var(--s3) 0 0;font-size:14px;color:var(--ink-2);line-height:1.6}
+/* 分节：实心条 + 反白字，横贯 */
+.sbar{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:0 var(--s3);
+  margin:var(--s7) 0 var(--s4);align-items:baseline;
+}
+.sbar b{
+  grid-column:1 / 4;background:var(--ink);color:#fff;
+  padding:var(--s1) var(--s3);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;
+}
+.sbar b.warn{background:var(--key)}
+.sbar span{grid-column:4 / 11;font-size:13px;color:var(--ink-3)}
+/* 条目：序号进左栏槽，正文统一从第 4 栏悬挂 */
+.hang{list-style:none;margin:0;padding:0}
+.hang>li{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:0 var(--s3);
+  padding:var(--s4) 0;border-top:1px solid var(--line);
+}
+.hang>li:first-child{border-top:0}
+.hang .hn{grid-column:1 / 2;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.hang .hb{grid-column:2 / 11}
+.hang .hb b{display:block;font-size:16px;font-weight:700;margin-bottom:var(--s1)}
+.hang .hb p{margin:0;font-size:14px;color:var(--ink-2);line-height:1.62}
+
+/* ▓▓▓ editorial：报纸头版 ▓▓▓
+   报头 → 通栏导语 → 多栏正文流 → 抽言打断栏流 → 边栏。 */
+.mast{
+  border-top:4px solid var(--ink);border-bottom:1px solid var(--ink);
+  padding:var(--s2) 0;margin-bottom:var(--s5);
+  display:flex;justify-content:space-between;align-items:baseline;gap:var(--s4);
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;
+  color:var(--ink-3);
+}
+.mast .mt{font-size:13px;color:var(--ink);letter-spacing:.2em}
+.lede{margin-bottom:var(--s6)}
+.lede h1{
+  margin:0;font-size:56px;font-weight:800;line-height:1.04;
+  letter-spacing:-.038em;max-width:22em;
+}
+.lede .sub{
+  margin:var(--s4) 0 0;font-size:19px;line-height:1.58;color:var(--ink-2);
+  max-width:34em;
+}
+.lede .sub::first-letter{
+  float:left;font-size:72px;line-height:.76;font-weight:800;
+  margin:6px 10px 0 0;color:var(--ink);
+}
+/* 真正的多栏正文流 */
+.flow{
+  column-count:3;column-gap:var(--s5);column-rule:1px solid var(--line);
+  margin:var(--s6) 0;padding-top:var(--s4);border-top:1px solid var(--ink);
+}
+.flow h3{
+  margin:0 0 var(--s2);font-size:15px;font-weight:700;
+  break-after:avoid;
+}
+.flow h3 i{
+  font-style:normal;color:var(--ink-4);margin-right:6px;
+  font-variant-numeric:tabular-nums;
+}
+.flow p{margin:0 0 var(--s4);font-size:14px;line-height:1.66;color:var(--ink-2)}
+.flow .grp{break-inside:avoid;margin-bottom:var(--s4)}
+/* 抽言：打断栏流，形成视觉标点 */
+.pullq{
+  margin:var(--s6) 0;padding:var(--s5) 0;
+  border-top:3px solid var(--ink);border-bottom:1px solid var(--ink);
+  font-size:29px;font-weight:700;line-height:1.32;letter-spacing:-.02em;
+  max-width:26em;
+}
+.pullq small{
+  display:block;margin-top:var(--s3);font-size:14px;font-weight:400;
+  color:var(--ink-3);letter-spacing:0;
+}
+/* 边栏：与正文流并置，宽度不等 */
+.withbar{display:grid;grid-template-columns:1fr 300px;gap:var(--s6);margin:var(--s6) 0}
+.bar-h{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--ink-3);border-bottom:2px solid var(--ink);
+  padding-bottom:var(--s2);margin-bottom:var(--s3);
+}
+.barlist{list-style:none;margin:0;padding:0}
+.barlist>li{padding:var(--s3) 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.barlist>li b{display:block;font-size:14.5px;margin-bottom:2px}
+.barlist>li p{margin:0;color:var(--ink-3);line-height:1.56}
+.barlist>li.gate{border-left:3px solid var(--ink);padding-left:var(--s3)}
+
+/* ▓▓▓ gallery：展览动线 ▓▓▓
+   一屏一件展品，靠巨量留白隔开，标签在下方。没有网格。 */
+.walk{margin:0}
+/* 展品成对并置：单栏会让页面长到 20 屏，且右半屏全空 */
+.walk.pair{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0 var(--s6);align-items:start;
+}
+.walk.pair>.plate{max-width:none}
+.plate{
+  padding:var(--s6) 0;border-bottom:1px solid var(--line);
+  max-width:38em;
+}
+.plate.wide{grid-column:1 / -1;max-width:none}
+.plate.wide .art{font-size:31px;max-width:30em}
+.plate.wide .note{max-width:38em}
+.plate:last-child{border-bottom:0}
+.plate .art{
+  font-size:24px;font-weight:300;line-height:1.42;letter-spacing:-.012em;
+  color:var(--ink);margin:0;
+}
+.plate .art b{font-weight:600}
+.plate .cap{
+  margin-top:var(--s6);padding-top:var(--s2);
+  border-top:1px solid var(--ink);
+  display:flex;gap:var(--s3);align-items:baseline;
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.18em;
+  color:var(--ink-3);
+}
+.plate .cap .cn{font-weight:700;color:var(--ink)}
+.plate .cap.warn{border-top-color:var(--key)}
+.plate .cap.warn .cn{color:var(--key)}
+.plate .note{
+  margin:var(--s3) 0 0;font-size:14px;line-height:1.7;color:var(--ink-2);
+  max-width:32em;
+}
+/* 展品编号：极小，靠边 */
+.plate .idx{
+  font-size:10.5px;letter-spacing:.2em;color:var(--ink-4);
+  margin-bottom:var(--s4);text-transform:uppercase;
+}
+/* 数字以陈列方式并置，不是卡片 */
+.vitrine{display:flex;flex-wrap:wrap;gap:var(--s7);margin:var(--s6) 0}
+.vitrine>div{min-width:100px}
+.vitrine .vv{font-size:44px;font-weight:300;line-height:1;letter-spacing:-.03em}
+.vitrine .vv em{font-style:normal;font-size:14px;margin-left:2px;color:var(--ink-3)}
+.vitrine .vk{
+  margin-top:var(--s3);padding-top:var(--s2);border-top:1px solid var(--line);
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.18em;color:var(--ink-3);
+}
+.vitrine .vv.warn{color:var(--key)}
+.vitrine .vk.warn{border-top-color:var(--key)}
+
+/* ▓▓▓ modern：产品页 tile 序列 ▓▓▓
+   一屏一个信息，居中，交替底色，tile 之间 0 间隙。 */
+.tile{
+  padding:var(--band) var(--s5);text-align:center;
+}
+.tile.alt{background:var(--tint)}
+.tile.dark{background:var(--ink);color:#fff}
+.tile .eyebrow{
+  font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--key-lt);
+  margin-bottom:var(--s2);
+}
+.tile h2{
+  margin:0 auto;font-size:38px;font-weight:700;line-height:1.16;
+  letter-spacing:-.028em;max-width:22em;
+}
+.tile .say{
+  margin:var(--s4) auto 0;font-size:17px;line-height:1.6;color:var(--ink-2);
+  max-width:32em;text-align:center;
+}
+/* 长段落居中会让中文断行很难读；超过一行半的正文改左对齐 */
+.tile .say.long{text-align:left}
+.tile.dark .say{color:rgba(255,255,255,.78)}
+.tile .no{
+  font-size:15px;font-weight:600;color:var(--ink-4);
+  letter-spacing:.08em;margin-bottom:var(--s3);
+}
+/* 指标行：一排，居中，无边框 */
+.statrow{
+  display:flex;justify-content:center;flex-wrap:wrap;
+  gap:var(--s6) var(--s7);margin:var(--s6) auto 0;
+}
+.statrow>div{min-width:96px}
+.statrow .sv{font-size:50px;font-weight:700;line-height:1;letter-spacing:-.035em}
+.statrow .sv em{font-style:normal;font-size:15px;font-weight:600;margin-left:2px}
+.statrow .sv.warn{color:var(--key-lt)}
+.statrow .sk{
+  margin-top:var(--s2);font-size:12.5px;color:var(--ink-3);
+}
+/* 条目：药丸 + 居中堆叠，靠细线分段 */
+.pills{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:var(--s2);
+  margin:var(--s5) auto 0;max-width:40em;
+}
+.pills>span{
+  border:1px solid var(--line);border-radius:999px;
+  padding:5px 14px;font-size:13px;color:var(--ink-2);
+}
+.pills>span.on{border-color:var(--ink);color:var(--ink);font-weight:600}
+.feats{margin:var(--s6) auto 0;max-width:38em;text-align:left}
+.feats>div{
+  padding:var(--s5) 0;border-top:1px solid var(--line);
+}
+.feats>div:first-child{border-top:0}
+.feats b{display:block;font-size:17px;margin-bottom:var(--s1);text-align:center}
+.feats p{margin:0 auto;font-size:15px;color:var(--ink-2);line-height:1.62;max-width:32em}
+
+/* ▓▓▓ mono：终端档案卡 ▓▓▓
+   整页是框线构成的记录卡，字段名 + 值对齐，像一份规格书。 */
+.rec{
+  font-family:var(--mono);border:1px solid var(--line-2);
+  margin-bottom:var(--s5);
+}
+.rec>.rh{
+  border-bottom:1px solid var(--line-2);padding:var(--s2) var(--s3);
+  font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--tint);display:flex;justify-content:space-between;gap:var(--s3);
+}
+.rec>.rh i{font-style:normal;color:var(--ink-3);font-weight:400}
+.rec>.rb{padding:var(--s3)}
+/* 字段行：键左值右，等宽对齐 */
+.kv{display:grid;grid-template-columns:132px 1fr;gap:var(--s2) var(--s3)}
+.kv>dt{
+  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink-3);padding-top:3px;
+}
+.kv>dd{margin:0;font-size:14px;line-height:1.6;color:var(--ink-2);font-family:var(--sans)}
+.kv>dd b{color:var(--ink)}
+.kv>dt.gate{color:var(--ink)}
+.kv>dt.gate::before{content:"▸ ";color:var(--ink)}
+.kv>dt.warn{color:var(--key-lt)}
+/* 巨大字段值：档案卡的关键读数 */
+.readout{display:flex;flex-wrap:wrap;gap:var(--s5) var(--s6);margin:0}
+.readout>div{min-width:104px}
+.readout .rv{
+  font-family:var(--mono);font-size:46px;font-weight:700;line-height:1;
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+}
+.readout .rv em{font-style:normal;font-size:14px;margin-left:3px;color:var(--ink-3)}
+.readout .rv.warn{color:var(--key-lt)}
+.readout .rk{
+  margin-top:var(--s2);font-size:11px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--ink-3);
+}
+.readout .gauge{margin-top:var(--s2);font-size:13px;letter-spacing:2px;color:var(--ink-4)}
+.readout .gauge b{color:var(--ink);font-weight:400}
+/* 档案卡里的清单：编号 + 缩进值 */
+.entries{list-style:none;margin:0;padding:0}
+.entries>li{
+  padding:var(--s3) 0;border-top:1px dashed var(--line);
+  display:grid;grid-template-columns:52px 1fr;gap:0 var(--s3);
+}
+.entries>li:first-child{border-top:0}
+.entries .en{
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--key-lt);
+  padding-top:2px;
+}
+.entries b{display:block;font-size:15px;margin-bottom:2px}
+.entries b::before{content:"› ";color:var(--ink-4);font-family:var(--mono)}
+.entries p{margin:0;font-size:14px;color:var(--ink-2);line-height:1.6}
+
 @media(max-width:880px){
   .band{padding-left:var(--s5);padding-right:var(--s5)}
   .hero .no{font-size:60px}
@@ -706,6 +1009,40 @@ b{font-weight:600}   /* 标题粗、正文细：正文加粗只到 600，不用 
   .t-modern .hero .dek,.t-modern .grid p,.t-modern .mark p{text-align:left}
   .t-modern .u-h,.t-modern .u-k,.t-modern .u-t,.t-modern .u-q{text-align:left}
   .t-modern .sec{justify-content:flex-start}
+  /* ---- 新架构的窄屏收敛 ---- */
+  /* 瑞士：12 栏塌成 6 栏，海报序号收小并回到正常流 */
+  .poster{grid-template-columns:repeat(6,1fr)}
+  .poster .pno{grid-column:1 / -1;font-size:84px}
+  .poster .pkick,.poster h1,.poster .pdek{grid-column:1 / -1}
+  .gwall{grid-template-columns:repeat(6,1fr)}
+  .gwall>li,.gwall>li.w6,.gwall>li.w4{grid-column:span 3}
+  .sbar{grid-template-columns:1fr}
+  .sbar b,.sbar span{grid-column:1}
+  .sbar span{margin-top:var(--s2)}
+  .hang>li{grid-template-columns:repeat(6,1fr)}
+  .hang .hn{grid-column:1 / 2}
+  .hang .hb{grid-column:2 / -1}
+  /* 编辑部：三栏流塌成单栏，边栏落到正文下方 */
+  .flow{column-count:1;column-rule:none}
+  .flow[style]{column-count:1 !important}
+  .withbar{grid-template-columns:1fr}
+  .lede h1{font-size:34px}
+  .lede .sub::first-letter{font-size:48px}
+  .pullq{font-size:22px}
+  .mast{flex-wrap:wrap;gap:var(--s1) var(--s3)}
+  /* 画廊：双栏展签塌成单栏 */
+  .walk.pair{grid-template-columns:1fr}
+  .plate .art,.plate.wide .art{font-size:20px}
+  /* 苹果：tile 内边距收窄 */
+  .tile{padding:var(--s6) var(--s4)}
+  .tile h2{font-size:26px}
+  .statrow{gap:var(--s5)}
+  .statrow .sv{font-size:36px}
+  /* 档案卡：键值改上下堆叠，132px 栏槽在窄屏太挤 */
+  .kv{grid-template-columns:1fr;gap:var(--s1)}
+  .kv>dt{padding-top:var(--s2)}
+  .readout .rv{font-size:34px}
+  .entries>li{grid-template-columns:44px 1fr}
   /* mono：键值栏槽收窄 */
   .t-mono .stack .row,.t-swiss .stack .row{grid-template-columns:40px 1fr}
   .t-gallery{--band:72px}
@@ -737,145 +1074,59 @@ b{font-weight:600}   /* 标题粗、正文细：正文加粗只到 600，不用 
 </style>
 </head>
 <body class="t-swiss">
-<div class="band">
-  <div class="hero">
-    <div class="no">02</div>
-    <div>
-      <span class="kicker">能不能做 · 什么客户 · 什么时机适合做</span>
-      <h1>信号回答「值不值得做」，前提回答「做不做得成」</h1>
-      <p class="dek">信号差一点，可以和客户一起创造条件；前提缺一项，就建议先补齐再定时间，别把问题留到现场。</p>
-    </div>
-  </div>
-
-  <div class="grid">
-    <div class="u-h c2">
-      <span class="lb">五条信号</span>
-      <span class="fig">5<em>条</em></span>
-      <p>都对上，才值得投一整天。差一到两条可以和客户一起创造条件，不是硬门槛。</p>
-      <div class="seg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
-      <p><b>本例：5 条全中</b>　决策窗口、高层到场、客户素材、领航员、配合度——五条逐项对照后全部成立。</p>
-    </div>
-    <div class="u-h c2">
-      <span class="lb">六件前提</span>
-      <span class="fig">6<em>项</em></span>
-      <p>缺哪件补哪件。这是硬门槛——缺一项就别急着定时间。</p>
-      <div class="seg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
-      <p><b>本例：4 项扎实、2 项压线</b>　高层支持、接口人、领航员、场景预演都到位；试用包与互动物料卡到最后一刻。</p>
-    </div>
-    <div class="u-k c1">
-      <span class="lb">劝退</span>
-      <span class="fig key">4<em>条</em></span>
-      <p>命中任意一条，先别定时间。</p>
-    </div>
-    <div class="u-t c1">
-      <span class="lb">本例压线</span>
-      <span class="fig">2<em>项</em></span>
-      <p>后来都真出了问题。</p>
-    </div>
-  </div>
+<div class="poster">
+  <div class="pno">02</div>
+  <div class="pkick">能不能做 · 什么客户 · 什么时机适合做</div>
+  <h1>信号回答「值不值得做」，前提回答「做不做得成」</h1>
+  <p class="pdek">信号差一点，可以和客户一起创造条件；前提缺一项，就建议先补齐再定时间，别把问题留到现场。</p>
 </div>
-
-<div class="band alt tight">
-  <div class="sec"><span class="pill">信号</span><small>五条都对上，才值得投一整天</small></div>
-  <div class="stack">
-    <div class="row"><div class="n">01</div><div>
-      <div class="ct">决策窗口临近</div>
-      <p>客户 1–2 个月内要选型、定预算或向上汇报，需要一次临门一脚的验证，而不是长期陪跑。</p>
-    </div></div>
-    <div class="row"><div class="n">02</div><div>
-      <div class="ct">高层愿意到场</div>
-      <p>一号位或二号位能全程参与开营与点评，风格务实、讲真话不走过场。</p>
-    </div></div>
-    <div class="row"><div class="n">03</div><div>
-      <div class="ct">客户自己有料</div>
-      <p>已自行梳理过场景清单或痛点盘点，动手环节不缺真实题目。</p>
-    </div></div>
-    <div class="row"><div class="n">04</div><div>
-      <div class="ct">需要差异化验证</div>
-      <p>客户对能不能落地有疑虑，或有竞品同台承诺类似活动。</p>
-    </div></div>
-    <div class="row"><div class="n">05</div><div>
-      <div class="ct">配合度足以脱产一天</div>
-      <p>有部门接口人能推动 20–30 名骨干脱产、集中场地、自带电脑，并愿提前完成认证与人员导入。</p>
-    </div></div>
-  </div>
+<ul class="gwall">
+  <li class="w6 lead"><span class="gk">五条信号 · 值不值得做</span><span class="gv">5<em>条</em></span><p>都对上，才值得投一整天。差一到两条可以和客户一起创造条件，不是硬门槛。本例 5 条全中。</p></li>
+  <li class="w6 lead"><span class="gk">六件前提 · 做不做得成</span><span class="gv">6<em>项</em></span><p>缺哪件补哪件。这是硬门槛——缺一项就别急着定时间。本例 4 项扎实、2 项压线。</p></li>
+  <li class="warn"><span class="gk">劝退</span><span class="gv warn">4<em>条</em></span><p>命中任意一条，先别定时间。</p></li>
+  <li><span class="gk">本例压线</span><span class="gv">2<em>项</em></span><p>后来都真出了问题。</p></li>
+  <li class="w6"><span class="gk">结论</span><p>五条信号逐项对照后全部成立，六件前提里两件卡到最后一刻——这两件后来都真出了问题。</p></li>
+</ul>
+<div class="sbar"><b>信号</b><span>五条都对上，才值得投一整天</span></div>
+<ul class="hang">
+  <li><div class="hn">01</div><div class="hb"><b>决策窗口临近</b><p>客户 1–2 个月内要选型、定预算或向上汇报，需要一次临门一脚的验证，而不是长期陪跑。</p></div></li>
+  <li><div class="hn">02</div><div class="hb"><b>高层愿意到场</b><p>一号位或二号位能全程参与开营与点评，风格务实、讲真话不走过场。</p></div></li>
+  <li><div class="hn">03</div><div class="hb"><b>客户自己有料</b><p>已自行梳理过场景清单或痛点盘点，动手环节不缺真实题目。</p></div></li>
+  <li><div class="hn">04</div><div class="hb"><b>需要差异化验证</b><p>客户对能不能落地有疑虑，或有竞品同台承诺类似活动。</p></div></li>
+  <li><div class="hn">05</div><div class="hb"><b>配合度足以脱产一天</b><p>有部门接口人能推动 20–30 名骨干脱产、集中场地、自带电脑，并愿提前完成认证与人员导入。</p></div></li>
+</ul>
+<div class="mark">
+  <div class="big">前提缺一项，就别急着定时间。</div>
+  <p>信号可以创造，前提只能补齐——这是这一章唯一需要背下来的判断。</p>
 </div>
-
-<div class="band">
-  <div class="mark">
-    <div class="big">前提缺一项，就别急着定时间。</div>
-    <p>信号可以创造，前提只能补齐——这是这一章唯一需要背下来的判断。</p>
-  </div>
-
-  <div class="sec"><span class="pill">前提</span><small>六件事，缺哪件补哪件；第一件是总闸</small></div>
-  <div class="grid">
-    <div class="u-h c4">
-      <span class="lb">总闸 · 缺了其余五项都无意义</span>
-      <div class="ct">高层支持</div>
-      <p>有人能真正调动资源，且核心高管愿意承担开营与点评。这一项不成立，其余五项准备得再好也撑不起一整天。</p>
-    </div>
-    <div class="u-t c2">
-      <div class="ct">客户侧接口人</div>
-      <p>负责认证、导入、分组，并督促骨干全程在场。</p>
-    </div>
-    <div class="u-t c2">
-      <div class="ct">领航员到位</div>
-      <p>每人能独立带组：选题、带练、排障、兜底；组数不超过领航员数。</p>
-    </div>
-    <div class="u-q c2">
-      <span class="lb">账号 T-2 闭环</span>
-      <p>认证开通后逐人实测登录，另备测试租户预案。</p>
-      <p class="flag">本例压线：会前一天才生效</p>
-    </div>
-    <div class="u-t c1">
-      <div class="ct">场景预演</div>
-      <p>会前预搭排雷，仅内部用。</p>
-    </div>
-    <div class="u-q c1">
-      <span class="lb">物料 T-1</span>
-      <p>签到、投票、问卷提前建好。</p>
-      <p class="flag">本例压线</p>
-    </div>
-  </div>
-</div>
-
-<div class="band alt tight">
-  <div class="sec key"><span class="pill">劝退</span><small>四条里命中任意一条，就先别定时间</small></div>
-  <div class="grid">
-    <div class="u-k c3">
-      <span class="lb">最常见、也最致命</span>
-      <div class="ct">账号或数据没就绪</div>
-      <p>认证、导入、试用包没闭环，现场会变成集体排障——一整天的体验会在头 30 分钟直接崩掉，且当场无法挽回。</p>
-    </div>
-    <div class="u-t c1">
-      <div class="ct">决策人不来</div>
-      <p>效果传不到决策圈，改做小范围体验。</p>
-    </div>
-    <div class="u-t c2">
-      <div class="ct">客户说不清痛点</div>
-      <p>连 3–5 个真实高耗时场景都提不出，应先做场景调研，否则动手环节没有真题。</p>
-    </div>
-    <div class="u-t c2">
-      <div class="ct">领航员配比不够</div>
-      <p>1 人带超过 1 个组，或领航员自己没跑通产品，宁可减组、延期。</p>
-    </div>
-  </div>
-</div>
-
-<div class="band">
-  <div class="sec"><span class="pill">本例对照</span><small>压线的两项后来都真出了问题</small></div>
-  <table>
-    <thead><tr><th>项</th><th>本例情况</th><th>结果</th></tr></thead>
-    <tbody>
-      <tr><td>决策窗口</td><td>次月中完成选型</td><td>扎实满足</td></tr>
-      <tr><td>高层到场</td><td>一号位与二号位开营、点评都在</td><td>扎实满足</td></tr>
-      <tr><td>客户素材</td><td>已梳理场景清单与试点</td><td>扎实满足</td></tr>
-      <tr><td>领航员</td><td>6 人带 5 组，外地同事提前到场</td><td>扎实满足</td></tr>
-      <tr><td>试用包</td><td>卡得太紧，会前一天才生效</td><td><b class="flag">压线</b>，几乎没有缓冲</td></tr>
-      <tr><td>互动物料</td><td>投票文档当天临场还在找</td><td><b class="flag">压线</b>，没闭环</td></tr>
-    </tbody>
-  </table>
-  <div class="foot"><b>体会：</b>信号差一点可以一起创造条件，前提缺项就建议先补齐再定时间。</div>
-</div>
+<div class="sbar"><b>前提</b><span>六件事，缺哪件补哪件；第一件是总闸</span></div>
+<ul class="hang">
+  <li class="gate"><div class="hn">01</div><div class="hb"><b>高层支持</b><p>有人能真正调动资源，且核心高管愿意承担开营与点评。这一项不成立，其余五项准备得再好也撑不起一整天。</p></div></li>
+  <li><div class="hn">02</div><div class="hb"><b>客户侧接口人</b><p>负责认证、导入、分组，并督促骨干全程在场。</p></div></li>
+  <li><div class="hn">03</div><div class="hb"><b>领航员到位</b><p>每人能独立带组：选题、带练、排障、兜底；组数不超过领航员数。</p></div></li>
+  <li class="warn"><div class="hn">04</div><div class="hb"><b>账号 T-2 闭环</b><p>认证开通后逐人实测登录，另备测试租户预案。本例压线：会前一天才生效。</p></div></li>
+  <li><div class="hn">05</div><div class="hb"><b>场景预演</b><p>会前预搭排雷，仅内部用。</p></div></li>
+  <li class="warn"><div class="hn">06</div><div class="hb"><b>物料 T-1</b><p>签到、投票、问卷提前建好。本例压线。</p></div></li>
+</ul>
+<div class="sbar"><b class="warn">劝退</b><span>四条里命中任意一条，就先别定时间</span></div>
+<ul class="hang">
+  <li><div class="hn">01</div><div class="hb"><b>账号或数据没就绪</b><p>认证、导入、试用包没闭环，现场会变成集体排障——一整天的体验会在头 30 分钟直接崩掉，且当场无法挽回。</p></div></li>
+  <li><div class="hn">02</div><div class="hb"><b>决策人不来</b><p>效果传不到决策圈，改做小范围体验。</p></div></li>
+  <li><div class="hn">03</div><div class="hb"><b>客户说不清痛点</b><p>连 3–5 个真实高耗时场景都提不出，应先做场景调研，否则动手环节没有真题。</p></div></li>
+  <li><div class="hn">04</div><div class="hb"><b>领航员配比不够</b><p>1 人带超过 1 个组，或领航员自己没跑通产品，宁可减组、延期。</p></div></li>
+</ul>
+<div class="sbar"><b>本例对照</b><span>压线的两项后来都真出了问题</span></div>
+<table>
+<thead><tr><th>项</th><th>本例情况</th><th>结果</th></tr></thead>
+<tbody>
+  <tr><td>决策窗口</td><td>次月中完成选型</td><td>扎实满足</td></tr>
+  <tr><td>高层到场</td><td>一号位与二号位开营、点评都在</td><td>扎实满足</td></tr>
+  <tr><td>客户素材</td><td>已梳理场景清单与试点</td><td>扎实满足</td></tr>
+  <tr><td>领航员</td><td>6 人带 5 组，外地同事提前到场</td><td>扎实满足</td></tr>
+  <tr><td>试用包</td><td>卡得太紧，会前一天才生效</td><td><b class="flag">压线</b>，几乎没有缓冲</td></tr>
+  <tr><td>互动物料</td><td>投票文档当天临场还在找</td><td><b class="flag">压线</b>，没闭环</td></tr>
+</tbody>
+</table>
+<div class="foot"><b>体会：</b>信号差一点可以一起创造条件，前提缺项就建议先补齐再定时间。</div>
 </body>
 </html>

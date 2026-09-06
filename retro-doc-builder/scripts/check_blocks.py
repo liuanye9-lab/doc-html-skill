@@ -115,8 +115,13 @@ def check(path):
         if re.search(r'grid-template-columns\s*:\s*(repeat\(|1fr\s+1fr)', txt, re.I):
             errs.append('用了多列但缺 @media(max-width:640px) 塌陷规则')
 
-    if not re.search(r'class=["\'][^"\']*\bhero\b', txt):
-        warns.append('缺 .hero 报头：每块顶部应有最高层级的报头（巨型序号 + 三段式）')
+    # 每块顶部必须有报头，但五套各有自己的报头形态——这正是「换形态」的产物，
+    # 所以不写死 .hero：poster=海报 / mast+lede=报纸报头 / tile=产品页首屏
+    # / plate.wide=展签 / rec=档案卡抬头，任一即可。
+    HEADS = r'\b(hero|poster|mast|lede|tile|plate|rec)\b'
+    if not re.search(r'class=["\'][^"\']*' + HEADS, txt):
+        warns.append('块顶部缺报头：需要 .hero / .poster / .mast+.lede / .tile / '
+                     '.plate.wide / .rec 之一作为最高层级的入口')
 
     # 尺寸编码优先级：bento 网格里若所有单元同宽，等于普通卡片墙
     for gi, grid in enumerate(re.findall(r'<div class="grid">(.*?)(?=<div class="(?:grid|sec|mark|stack|band)|<table|<div class="foot"|$)', txt, re.S)):
@@ -250,30 +255,48 @@ def check_v7_discipline(txt, warns, infos):
             if a > 0.06:
                 errs.append(f'阴影 alpha {a} 过重；须 ≤0.06（极淡）')
 
-    # --- 主题必须换形态，不能只换颜色 ---
-    # 这条规则的由来：v7 第一版五套主题只覆盖了颜色与字号，
-    # 用户一眼看出「不就是换了个颜色」。风格差异必须体现在组件形态上：
-    # 网格怎么成形、分节怎么标记、条目怎么排列、边界怎么界定。
+    # --- 主题必须换版面架构，不能只换颜色 ---
+    # 两轮否决的根因：五套主题共用同一份 HTML 骨架，只切 body 的 class。
+    # 只数 CSS 属性抓不到这一点（CSS 差异再大，骨架一样就还是同一个版面）。
+    # 真正的判据是 body 里用了哪套**架构组件**。
+    ARCH = {
+        'modern':    ('tile', 'statrow', 'feats', 'pills'),
+        'swiss':     ('poster', 'gwall', 'sbar', 'hang'),
+        'editorial': ('mast', 'lede', 'flow', 'pullq', 'withbar', 'barlist'),
+        'gallery':   ('walk', 'plate', 'vitrine'),
+        'mono':      ('rec', 'kv', 'readout', 'entries'),
+    }
     if th:
+        body_html = txt[txt.find('<body'):]
+        used = set()
+        for m in re.findall(r'class="([^"]+)"', body_html):
+            used |= set(m.split())
+        mine = set(ARCH.get(th, ()))
+        got = mine & used
+        # 别人家的架构组件：出现即说明骨架没换，是照抄的
+        others = set()
+        for k, v in ARCH.items():
+            if k != th:
+                others |= set(v)
+        borrowed = (used & others) - mine
+        if len(got) < 3:
+            errs.append(
+                f'主题 t-{th} 只用了 {len(got)} 个自己的架构组件'
+                f'（{sorted(got) if got else "无"}，本套应有 {sorted(mine)}）；'
+                f'五套模板必须是五种**版面架构**——报头形态、阅读顺序、'
+                f'信息容器都要不同，不是同一份骨架换配色')
+        elif borrowed:
+            errs.append(
+                f'主题 t-{th} 借用了其他模板的架构组件 {sorted(borrowed)}；'
+                f'每套模板用自己的一组组件，不要混用')
+        else:
+            infos.append(f'架构组件 {len(got)} 个：{", ".join(sorted(got))}')
+
         own = re.findall(r'\.t-%s\b([^{}]*)\{([^{}]*)\}' % th, txt)
         props = set()
         for _sel, decl in own:
             props |= set(re.findall(r'([a-z-]+)\s*:', decl))
-        STRUCTURAL = {
-            'display', 'grid-template-columns', 'grid-column', 'flex-direction',
-            'column-count', 'column-rule', 'float', 'text-align', 'content',
-            'border-left', 'border-right', 'justify-items', 'padding-left',
-            'writing-mode', 'position', 'order',
-        }
-        hit = props & STRUCTURAL
-        if len(hit) < 3:
-            errs.append(f'主题 t-{th} 只覆盖了 {len(hit)} 类结构属性'
-                        f'（{sorted(hit) if hit else "无"}）；'
-                        f'五套模板必须换组件形态而不是只换配色——'
-                        f'网格如何成形、分节如何标记、条目如何排列、边界如何界定，'
-                        f'至少要有 3 类结构性差异')
-        else:
-            infos.append(f'结构签名 {len(hit)} 类：{", ".join(sorted(hit)[:6])}')
+        infos.append(f'主题层覆盖 {len(props)} 类属性')
 
     # --- 打破卡片：不应给单元同时加边框 + 内边距做成封闭卡片 ---
     closed = re.findall(r'\.u[\w-]*\s*\{[^}]*border\s*:\s*1px[^}]*padding[^}]*\}', txt)
