@@ -1,82 +1,87 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-从正例派生两个负例，用于验证「配色纪律」两条规则真的在生效。
+从正例现场派生负例，验证 v7 视觉纪律的每条规则真的会失败。
 
-为什么用生成而不是直接提交文件：这两个负例是正例的最小变体（只改配色/类名），
-直接提交会得到两份 14KB 的近似副本，正例一改就漂移。生成则永远跟着正例走。
+为什么派生而不是存死文件：负例若是正例的副本，正例一改就漂移，
+而且 8 个 14KB 的副本没有信息量。派生保证负例永远跟着正例走。
 
 用法：
-    python3 tests/make_negatives.py            # 生成到 tests/
-    python3 tests/make_negatives.py --check    # 生成并断言两条规则都报错
-
-期望结果：
-    negative-multi-hue.html      → ERROR 出现 3 个彩色色相（上限 1）
-    negative-too-many-solid.html → ERROR 实底色块共 3 处（上限 1）
+    python3 tests/make_negatives.py            # 生成到 /tmp/rdb-neg
+    python3 tests/make_negatives.py --check    # 生成并断言每条都被拦住
 """
 import os
-import re
-import sys
 import subprocess
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-POSITIVE = os.path.join(ROOT, 'assets', 'examples', 'qualify-block.html')
+SRC = os.path.join(ROOT, 'assets', 'examples', 'theme-modern.html')
+CHECKER = os.path.join(ROOT, 'scripts', 'check_blocks.py')
+OUT = '/tmp/rdb-neg'
 
-# 每个负例：文件名 →（替换列表, 期望命中的关键词）
-CASES = {
-    'negative-multi-hue.html': (
-        # 注入第二、第三个色相：破坏「只有一个彩色色相」
-        [('--accent:#002FA7;', '--accent:#002FA7;\n  --x1:#047857;\n  --x2:#D97706;')],
-        '彩色色相',
-    ),
-    'negative-too-many-solid.html': (
-        # 把两张顶线卡改回实底：破坏「实底 ≤1 处」
-        [('class="cell-hd c4"', 'class="fill c4"'),
-         ('class="cell-acc c3"', 'class="fill c3"')],
-        '实底色块',
-    ),
-}
-
-
-def build():
-    if not os.path.isfile(POSITIVE):
-        sys.exit('找不到正例：%s' % POSITIVE)
-    src = open(POSITIVE, encoding='utf-8').read()
-    made = []
-    for name, (subs, _) in CASES.items():
-        out = src
-        for old, new in subs:
-            if old not in out:
-                sys.exit('正例里找不到待替换片段「%s」——正例结构已变，请更新本脚本' % old)
-            out = out.replace(old, new)
-        path = os.path.join(HERE, name)
-        open(path, 'w', encoding='utf-8').write(out)
-        made.append(path)
-        print('生成 %s' % name)
-    return made
+# (文件名, 说明, 变换, 期望命中的关键词)
+CASES = [
+    ('no-theme', '删掉 body 主题类',
+     lambda s: s.replace('<body class="t-modern">', '<body>'), '主题类'),
+    ('two-themes', '同时挂两套主题',
+     lambda s: s.replace('<body class="t-modern">',
+                         '<body class="t-modern t-swiss">'), '多个主题类'),
+    ('tight-space', '间距退回常规值（未 ×1.5）',
+     lambda s: s.replace('--s1:6px; --s2:12px; --s3:18px; --s4:24px;',
+                         '--s1:4px; --s2:8px; --s3:12px; --s4:16px;'), '1.5 倍'),
+    ('small-band', '通栏呼吸量压到 40px',
+     lambda s: s.replace('--band:88px;', '--band:40px;'), '呼吸量'),
+    ('card-shadow', '廉价封闭卡片阴影',
+     lambda s: s.replace('.u-q{', '.u-q{box-shadow:0 2px 8px rgba(0,0,0,.18);'),
+     '阴影范围过小'),
+    ('big-radius', '大圆角',
+     lambda s: s.replace('--r:6px;', '--r:24px;'), '圆角'),
+    ('too-much-key', '核心色超出 10% 口径',
+     lambda s: s.replace('class="lb"', 'class="lb flag"'), '核心色用在'),
+    ('second-hue', '引入第二个色相',
+     lambda s: s.replace('--ink-3:#86868B;', '--ink-3:#C0392B;'), '色相'),
+]
 
 
-def check(paths):
-    checker = os.path.join(ROOT, 'scripts', 'check_blocks.py')
-    failed = False
-    for path in paths:
-        name = os.path.basename(path)
-        want = CASES[name][1]
-        proc = subprocess.run([sys.executable, checker, path],
-                              capture_output=True, text=True)
-        hit = [ln.strip() for ln in proc.stdout.splitlines()
-               if 'ERROR' in ln and want in ln]
-        if hit:
-            print('  ✓ %-32s %s' % (name, hit[0]))
+def main():
+    if not os.path.isfile(SRC):
+        sys.exit('缺正例，请先跑 scripts/make_themes.py：%s' % SRC)
+    src = open(SRC, encoding='utf-8').read()
+    os.makedirs(OUT, exist_ok=True)
+    check = '--check' in sys.argv
+    missed = []
+
+    for name, desc, fn, expect in CASES:
+        path = os.path.join(OUT, '%s.html' % name)
+        mutated = fn(src)
+        if mutated == src:
+            missed.append('%s：变换未生效，正例结构可能已变' % name)
+            continue
+        open(path, 'w', encoding='utf-8').write(mutated)
+        if not check:
+            print('%-14s %s' % (name, desc))
+            continue
+        r = subprocess.run([sys.executable, CHECKER, path],
+                           capture_output=True, text=True)
+        hits = [l.strip() for l in r.stdout.splitlines()
+                if l.strip().startswith(('ERROR', 'WARN')) and expect in l]
+        ok = bool(hits)
+        print('%-14s %-24s %s' % (name, desc, '拦住' if ok else '✗ 漏过'))
+        if ok:
+            print('               → %s' % hits[0][:96])
         else:
-            print('  ✗ %-32s 期望命中「%s」但没有报错——规则可能已失效' % (name, want))
-            failed = True
-    return 1 if failed else 0
+            missed.append('%s：期望命中「%s」，实际没报' % (name, expect))
+
+    if check:
+        print()
+        if missed:
+            for m in missed:
+                print('漏检：%s' % m)
+            sys.exit(1)
+        print('%d/%d 条负例全部被拦住' % (len(CASES), len(CASES)))
+    return 0
 
 
 if __name__ == '__main__':
-    paths = build()
-    if '--check' in sys.argv:
-        print('\n验证两条配色纪律：')
-        sys.exit(check(paths))
+    sys.exit(main())

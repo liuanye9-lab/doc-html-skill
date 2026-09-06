@@ -16,12 +16,13 @@ BANNED = [
     (r'<input\b',                      'ERROR', '禁止 <input>：假复选框用 li::before 画'),
     (r'linear-gradient|conic-gradient|radial-gradient',
                                        'ERROR', '禁止渐变：AI slop 头号特征'),
-    (r'box-shadow\s*:\s*(?!none)',     'ERROR', '禁止阴影：用顶部 2px 语义线'),
-    (r'border-radius\s*:\s*[1-9]px',   'WARN',  '圆角过小（1-9px）：本风格用 18px 大圆角，小圆角会退回普通卡片'),
+    # 阴影不再一律禁止：允许「极淡 + 范围极大」，但下方会另行检查强度与数量
+    (r'border-radius\s*:\s*(?:[1-9]\d|\d{3,})px',
+                                       'WARN',  '圆角过大：现代主义极简用微圆角（0–8px），大圆角会显得廉价'),
     (r'#3370FF|#1456FO|#1456F0|#E8F1FF|#5B8CFF|#8FB4FF',
-                                       'ERROR', '禁止通用 SaaS 蓝：改用 --brick'),
+                                       'ERROR', '禁止通用 SaaS 蓝：改用主题自带的 --key 核心色'),
     (r'#00B42A|#E8FFEA|#FF7D00|#FFF7E8',
-                                       'ERROR', '禁止红绿灯语义色：改用 --pine / --ochre'),
+                                       'ERROR', '禁止红绿灯语义色：语义用尺寸与轻重档表达，不要用第二个颜色'),
     (r'@import\b',                      'ERROR', '禁止 @import 外部资源'),
     (r'src\s*=\s*["\']https?://',      'ERROR', '禁止外链资源（图片/字体/脚本）'),
     (r'fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr|unpkg\.com',
@@ -39,9 +40,44 @@ REQUIRED_META = [
     ('description',          r'<meta\s+name=["\']description["\']\s+content=["\'][^"\']{12,}'),
 ]
 
-TOKENS = ['--page', '--cell', '--ink', '--accent', '--line', '--r']
+TOKENS = ['--page', '--tint', '--ink', '--key', '--line', '--r', '--band', '--s7']
 
 MAX_SOLID = 1   # 整块允许的实底色块数（.fill + .mark 合计）
+
+
+
+THEME_NAMES = ('modern', 'swiss', 'editorial', 'gallery', 'mono')
+
+
+def declared_theme(txt):
+    """读 body 上声明的主题名；没有或有多个都返回 None。"""
+    m = re.search(r'<body[^>]*class=["\']([^"\']*)', txt, re.I)
+    found = set(re.findall(r'\bt-(%s)\b' % '|'.join(THEME_NAMES),
+                           m.group(1) if m else ''))
+    return found.pop() if len(found) == 1 else None
+
+
+def reachable_css(txt, theme):
+    """
+    只保留当前主题真正会生效的 CSS：剔除其他四套主题的 .t-xxx 规则块。
+    不这样做的话，5 套主题的核心色会被一起数进色相统计，导致误报。
+    """
+    if not theme:
+        return txt
+    others = [t for t in THEME_NAMES if t != theme]
+    out = txt
+    for o in others:
+        # 逐个删掉形如 .t-o{...} 与 .t-o .foo{...} 的规则块
+        out = re.sub(r'\.t-%s\b[^{}]*\{[^{}]*\}' % o, ' ', out)
+
+    # 解析级联：主题块若覆盖了核心色，:root 里的旧值不可达，必须剔除，
+    # 否则「:root 的蓝 + 主题的红」会被误判成用了两个色相。
+    for var in ('--key-lt', '--key'):
+        vals = re.findall(r'%s\s*:\s*(#[0-9A-Fa-f]{6})' % var, out)
+        if len(vals) > 1:
+            out = re.sub(r'%s\s*:\s*#[0-9A-Fa-f]{6}' % var, ' ', out)
+            out += '\n%s:%s;\n' % (var, vals[-1])   # 只留最终生效值
+    return out
 
 
 def check(path):
@@ -78,13 +114,13 @@ def check(path):
             errs.append('用了多列但缺 @media(max-width:640px) 塌陷规则')
 
     if not re.search(r'class=["\'][^"\']*\bhero\b', txt):
-        warns.append('缺 .hero 报头：每块顶部应有最高层级的实底报头')
+        warns.append('缺 .hero 报头：每块顶部应有最高层级的报头（巨型序号 + 三段式）')
 
     # 尺寸编码优先级：bento 网格里若所有单元同宽，等于普通卡片墙
-    for gi, grid in enumerate(re.findall(r'<div class="bento">(.*?)(?=<div class="(?:bento|sec|mark|stack)"|<table|<div class="foot"|$)', txt, re.S)):
+    for gi, grid in enumerate(re.findall(r'<div class="grid">(.*?)(?=<div class="(?:grid|sec|mark|stack|band)|<table|<div class="foot"|$)', txt, re.S)):
         spans = re.findall(r'class="[^"]*\b(c[1-4])\b', grid)
         if len(spans) >= 3 and len(set(spans)) == 1:
-            warns.append(f'第 {gi+1} 个 .bento 全部是 {spans[0]} 等宽单元；尺寸要编码优先级，'
+            warns.append(f'第 {gi+1} 个 .grid 全部是 {spans[0]} 等宽单元；尺寸要编码优先级，'
                          f'至少让主要单元用更大跨列（全等分等于普通卡片墙）')
 
     fs = [float(x) for x in re.findall(r'font-size\s*:\s*([\d.]+)px', txt)]
@@ -95,8 +131,10 @@ def check(path):
             warns.append(f'字号跨度仅 {span:.1f}×，层级不足；应有 ≥2.5× 的尺度对比')
 
     # 配色纪律：ink + ground + ONE accent。统计非中性色相的数量
+    # 只统计当前主题可达的 CSS——base.css 内含 5 套主题，全量统计会误报
+    scope = reachable_css(txt, declared_theme(txt))
     hues = set()
-    for h in re.findall(r'#([0-9A-Fa-f]{6})', txt):
+    for h in re.findall(r'#([0-9A-Fa-f]{6})', scope):
         r, g, b = [int(h[i:i+2],16)/255 for i in (0,2,4)]
         mx, mn = max(r,g,b), min(r,g,b)
         if (mx - mn) * 255 <= 24:                 # 灰阶，不计
@@ -111,25 +149,112 @@ def check(path):
                     f'语义请用尺寸与轻重档表达，不要用第二个颜色')
 
     body = txt[txt.find('<body'):]
-    solid = len(re.findall(r'class="[^"]*\bfill\b', body)) + len(re.findall(r'class="mark"', body))
+    solid = (len(re.findall(r'class="[^"]*\bfill\b', body))
+             + len(re.findall(r'class="[^"]*\bmark\b', body))
+             + len(re.findall(r'class="[^"]*\bband\s+ink\b', body)))
     if solid > MAX_SOLID:
         errs.append(f'实底色块共 {solid} 处（.fill + .mark），上限 {MAX_SOLID} 处。'
                     f'一堆色块会显得杂乱——层级请用字号、留白、顶线粗细表达，'
                     f'实底只留给全块唯一的焦点句')
 
     # 彩色点缀节制：彩色元素总数不宜过多
-    acc = len(re.findall(r'class="[^"]*\b(?:cell-acc|flag)\b', body)) \
-        + len(re.findall(r'class="[^"]*\bfig[^"]*\bacc\b', body)) \
-        + len(re.findall(r'class="sec acc"', body))
-    if acc > 6:
-        warns.append(f'彩色点缀 {acc} 处，偏多；彩色只作点缀（细线 / 小标签 / 单个数字），建议 ≤6 处')
-    infos.append(f'实底色块 {solid} 处 · 彩色点缀 {acc} 处')
+    acc = (len(re.findall(r'class="[^"]*\b(?:u-k|flag)\b', body))
+           + len(re.findall(r'class="[^"]*\bfig[^"]*\bkey\b', body))
+           + len(re.findall(r'class="[^"]*\bsec\s+key\b', body))
+           + len(re.findall(r'class="[^"]*\bkicker\b', body)))
+    # 90% 中性 / 10% 核心色：用「着色元素 ÷ 内容元素」估算核心色占比。
+    # 绝对条数会随块变长而误报，比例才是真正要守的判据。
+    content = (len(re.findall(r'<p\b', body)) + len(re.findall(r'class="[^"]*\bct\b', body))
+               + len(re.findall(r'class="[^"]*\blb\b', body)) + len(re.findall(r'<li\b', body))
+               + len(re.findall(r'<td\b', body)) + len(re.findall(r'class="[^"]*\bfig\b', body)))
+    ratio = acc / content if content else 0
+    infos.append(f'实底色块 {solid} 处 · 核心色 {acc}/{content} 个元素（{ratio*100:.0f}%）')
+    if ratio > 0.18:
+        warns.append(f'核心色用在 {ratio*100:.0f}% 的元素上，超出「90% 中性 + 10% 核心色」的口径；'
+                     f'色彩为内容服务而非吸引注意，建议压到 ≤18%')
 
+    errs += check_v7_discipline(txt, warns, infos)
     errs += check_counts(txt)
     e2, w2, i2 = check_feishu(txt)
     errs += e2; warns += w2; infos += i2
 
     return errs, warns, infos
+
+
+def check_v7_discipline(txt, warns, infos):
+    """
+    v7 三条视觉基调，静态可查的部分：
+      1 极致留白——间距基准须为常规值的 1.5 倍
+      2 打破卡片——不用带阴影的封闭卡片；阴影若有，必须极淡且范围极大且只一处
+      3 主题声明——body 必须挂 t-* 主题类，否则 token 落回默认值
+    """
+    errs = []
+
+    # --- 主题声明 ---
+    m = re.search(r'<body[^>]*class=["\']([^"\']*)', txt, re.I)
+    themes = re.findall(r'\bt-(modern|swiss|editorial|gallery|mono)\b', m.group(1) if m else '')
+    if not themes:
+        errs.append('body 缺主题类；必须是 t-modern / t-swiss / t-editorial / t-gallery / t-mono 之一，'
+                    '否则 5 套主题的 token 不生效')
+    elif len(set(themes)) > 1:
+        errs.append(f'body 同时挂了多个主题类 {sorted(set(themes))}；一个块只能用一套主题')
+    else:
+        infos.append(f'主题 t-{themes[0]}')
+
+    # --- 极致留白：间距基准 ×1.5 ---
+    sp = {}
+    for name, val in re.findall(r'--(s[1-7])\s*:\s*(\d+)px', txt):
+        sp[name] = int(val)
+    if sp:
+        # 常规基准 4/8/12/16/24/32/48 → ×1.5 应为 6/12/18/24/36/48/72
+        want = {'s1': 6, 's2': 12, 's3': 18, 's4': 24, 's5': 36, 's6': 48, 's7': 72}
+        off = [f'--{k}={sp[k]}px(应{want[k]}px)' for k in sorted(want) if k in sp and sp[k] != want[k]]
+        if off:
+            errs.append('间距未达「比常规大 1.5 倍」的要求：' + '、'.join(off))
+    th = declared_theme(txt)
+    # 剔除 @media 块：窄屏会按比例收缩留白，基准值只看非媒体查询部分
+    base_css = re.sub(r'@media[^{]*\{(?:[^{}]|\{[^{}]*\})*\}', ' ',
+                      reachable_css(txt, th))
+    bands = re.findall(r'--band\s*:\s*(\d+)px', base_css)
+    if bands:
+        # 主题块的覆盖写在 :root 之后，取最后一个生效值
+        b = int(bands[-1])
+        infos.append(f'通栏呼吸量 {b}px')
+        if b < 72:
+            errs.append(f'--band 仅 {b}px；通栏模块的垂直呼吸量应 ≥72px（宁可空着也不填满）')
+
+    # --- 微圆角：token 值也要查。写成 --r:24px 时字面量正则抓不到 ---
+    rr = re.findall(r'--r\s*:\s*(\d+)px', base_css)
+    if rr:
+        v = int(rr[-1])
+        if v > 8:
+            errs.append(f'--r 圆角 {v}px 过大；现代主义极简用微圆角（0–8px），'
+                        f'大圆角会显得廉价')
+
+    # --- 阴影：要么没有，要么极淡且范围极大，且整块最多一处 ---
+    shadows = [x for x in re.findall(r'box-shadow\s*:\s*([^;}]+)', txt) if 'none' not in x]
+    if shadows:
+        if len(shadows) > 1:
+            errs.append(f'出现 {len(shadows)} 处阴影；阴影要么没有，要么极淡且范围极大，整块最多一处')
+        for sh in shadows:
+            blur = [int(n) for n in re.findall(r'(\d+)px', sh)]
+            alpha = re.search(r'rgba\([^)]*?,\s*\.?(\d*\.?\d+)\s*\)', sh)
+            a = float(alpha.group(1)) if alpha else 1.0
+            if a > 1:
+                a = a / 100
+            if blur and max(blur) < 48:
+                errs.append(f'阴影范围过小（最大 {max(blur)}px）；须极淡且范围极大（blur ≥48px），'
+                            f'否则就是廉价的封闭卡片阴影')
+            if a > 0.06:
+                errs.append(f'阴影 alpha {a} 过重；须 ≤0.06（极淡）')
+
+    # --- 打破卡片：不应给单元同时加边框 + 内边距做成封闭卡片 ---
+    closed = re.findall(r'\.u[\w-]*\s*\{[^}]*border\s*:\s*1px[^}]*padding[^}]*\}', txt)
+    if len(closed) >= 3:
+        warns.append(f'{len(closed)} 处单元用了「1px 边框 + 内边距」的封闭卡片写法；'
+                     f'本风格靠通栏模块、细横线、纯留白分隔')
+
+    return errs
 
 
 def check_feishu(txt):

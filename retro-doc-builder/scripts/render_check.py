@@ -26,9 +26,13 @@ CHROME_CANDIDATES = [
 ]
 
 SEMANTIC = {
-    'brick': (0xA6, 0x3A, 0x22),
-    'pine':  (0x2F, 0x6B, 0x4F),
-    'ochre': (0x8A, 0x6A, 0x1F),
+    # 五套主题各自的核心色。采样用于确认「核心色真的渲染出来了」，
+    # 而不是因为对比度不足被读成黑色（早前深绿 #2C5545 就踩过）。
+    'ikb':      (0x00, 0x2F, 0xA7),   # t-modern 克莱因蓝
+    'ikb-lt':   (0x00, 0x47, 0xD6),   # t-modern 小字档
+    'swiss-red':(0xE3, 0x06, 0x13),   # t-swiss
+    'graphite': (0x4E, 0x6E, 0x7A),   # t-gallery 石墨青
+    'indigo':   (0x26, 0x34, 0x6B),   # t-mono 深靛
     'ink':   (0x1C, 0x1B, 0x18),
 }
 PAPER = [(0xF4, 0xF1, 0xE8), (0xFB, 0xF9, 0xF3)]
@@ -320,7 +324,7 @@ def main():
             for k, rgb in SEMANTIC.items():
                 found[k] = sum(c for p, c in px.items() if near(p, rgb))
             infos.append('语义色像素：' + '  '.join(f'{k}={v}' for k, v in found.items()))
-            for k in ('brick', 'pine', 'ochre'):
+            for k in ('ikb', 'ikb-lt', 'swiss-red', 'graphite', 'indigo'):
                 if re.search(r'var\(--' + k + r'\)', src) and found[k] < 20:
                     warns.append(f'{k} 在 CSS 中被使用，渲染像素仅 {found[k]}，'
                                  f'可能太深或太浅而读不出色相')
@@ -353,7 +357,7 @@ def main():
     print(f'截图目录：{outdir}')
     print('\n【必做】脚本只能测机械问题。请打开截图确认三件事：')
     print('  1. 字号层级是否真的拉开（巨大数字 vs 元信息）')
-    print('  2. brick / pine / ochre 三色是否都能辨认出色相')
+    print('  2. 该主题的核心色是否能辨认出色相（不是被读成黑）')
     print('  3. 发丝线是否过重、压过了文字')
     return 1 if tot_e else 0
 
