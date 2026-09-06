@@ -165,7 +165,8 @@ retro-doc-builder/
 │   └── render_check.py               渲染检查：溢出 / 塌陷 / 语义色像素 / 墨量
 ├── references/
 │   ├── visual-system.md              动手写 HTML 前必读
-│   ├── block-library.md              13 种通用结构 + 5 套架构组件，可直接复制
+│   ├── block-library.md              13 种通用结构，可直接复制
+│   ├── theme-architectures.md        5 套模板各自的架构组件（只读选定那套）
 │   ├── feishu-html-block.md          飞书 html5-block 硬约束与踩过的坑
 │   └── evaluation-record.md          实测依据、负例清单、两次方向性错误
 └── tests/

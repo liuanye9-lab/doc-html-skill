@@ -36,6 +36,8 @@
 | `t-gallery` | 展览动线 | `.plate.wide` 展签 | `.vitrine` 陈列式并置 | `.plate` 成对展品，标签在下 | 巨量留白，`.cap` 顶线 |
 | `t-mono` | 终端记录卡 | `.rec > .rh` 卡片抬头 | `.readout` 读数 + 字符刻度 | `.kv` 字段名值对齐 · `.entries` 编号项 | 框线容器 + 虚线分隔 |
 
+可复制的组件代码见 [`theme-architectures.md`](theme-architectures.md)。
+
 ### 硬规则：架构组件必须是自己的
 
 检查器会读 body 里的 class：

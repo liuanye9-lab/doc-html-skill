@@ -1,11 +1,11 @@
 ---
 name: retro-doc-builder
-description: 把一场活动、项目或客户交付复盘成「打法说明书」式飞书文档——按决策顺序而非时间顺序组织，正文承载易变信息、HTML5 Block 承载稳定结构，视觉为黑白灰 + 克莱因蓝点缀，靠字号与留白建立层级。Use when 用户要写复盘、总结、打法沉淀、经验沉淀、案例复盘、项目回顾、活动总结、workshop 总结、可复用 SOP，或说"把这场活动沉淀一下""写个复盘""总结成方法论""让别人能照着做"。也用于给已有复盘文档换视觉、换模板风格或补失败清单。Do NOT use for 纯会议纪要与逐字稿整理（用 lark-meeting）、纯数据分析报告（用 doubao-data-analysis）、对外营销案例包装（用 doubao-marketing-plan）。
+description: 把一场活动、项目或客户交付复盘成「打法说明书」式飞书文档——按决策顺序而非时间顺序组织，正文承载易变信息、HTML5 Block 承载稳定结构，内置 5 套版面架构（苹果式 t-modern / 瑞士 t-swiss / 报纸头版 t-editorial / 展览动线 t-gallery / 终端档案 t-mono），统一黑白灰 + 克莱因蓝点缀，靠字号与留白建立层级。Use when 用户要写复盘、总结、打法沉淀、经验沉淀、案例复盘、项目回顾、活动总结、workshop 总结、可复用 SOP，或说"把这场活动沉淀一下""写个复盘""总结成方法论""让别人能照着做"。也用于给已有复盘文档换视觉、换模板风格（如"换成瑞士风格""用杂志排版""做成档案风"）、补失败清单，或问有哪些模板可选。Do NOT use for 纯会议纪要与逐字稿整理（用 lark-meeting）、纯数据分析报告（用 doubao-data-analysis）、对外营销案例包装（用 doubao-marketing-plan）。
 license: Proprietary
 compatibility: 需要本机已安装 lark-doc（写飞书文档）与 lark-drive（素材/权限）；HTML5 Block 写入依赖当前用户的飞书租户权限，不自带凭据。渲染自检需本机 Chrome。
 metadata:
   author: Lark GTM Customer Success
-  version: "1.0.0"
+  version: "2.0.0"
 ---
 
 # Retro Doc Builder｜复盘文档生产线
@@ -95,7 +95,7 @@ metadata:
 | 全文唯一爆点 | 深底反白 | `.mark` |
 | 收口脚注 | 顶线小字 | `.foot` |
 
-结构清单与可直接复制的代码见 `references/block-library.md`。视觉规则见 `references/visual-system.md`。**动手写 HTML 前必须先读 visual-system.md**，否则会滑回 AI 默认审美。
+通用结构的可复制代码见 `references/block-library.md`；五套模板各自的架构组件见 `references/theme-architectures.md`（只读选定的那一套）。视觉规则见 `references/visual-system.md`。**动手写 HTML 前必须先读 visual-system.md**，否则会滑回 AI 默认审美。
 
 需要完整的真实块做参照时，看 `assets/examples/` 下的 5 套模板版本——同一份内容（第二章"开展条件判断"，含信号/前提/劝退/本例对照四段），自带完整样式，可直接改内容复用。改完内容后跑 `python3 scripts/make_themes.py` 重新生成全部 5 套，保证不漂移。
 
